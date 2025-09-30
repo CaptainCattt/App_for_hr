@@ -65,10 +65,6 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
         "approved_by": None,
         "approved_at": None
     })
-    placeholder.success(
-        f"📤 Yêu cầu '{leave_case}' từ {start_date} đến {end_date} ({duration} ngày) đã gửi!")
-    time.sleep(3)
-    placeholder.empty()
 
 
 def approve_leave(l_id, user_name):
