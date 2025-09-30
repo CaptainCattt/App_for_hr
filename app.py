@@ -32,8 +32,6 @@ for key, default in {
     "remaining_days": 0,
     "department": "",
     "position": "",
-    "dob": "",
-    "phone": ""
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -44,10 +42,9 @@ if not st.session_state["username"]:
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    if st.button("🚀 Login"):
-        user = login(username, password)  # kiểm tra username/password
+    def handle_login():
+        user = login(username, password)
         if user:
-            # Lưu thông tin vào session
             st.session_state["username"] = user.get("username", "")
             st.session_state["full_name"] = user.get(
                 "full_name", st.session_state["username"])
@@ -55,8 +52,6 @@ if not st.session_state["username"]:
             st.session_state["remaining_days"] = user.get("remaining_days", 12)
             st.session_state["department"] = user.get("department", "")
             st.session_state["position"] = user.get("position", "")
-            st.session_state["dob"] = user.get("dob", "")
-            st.session_state["phone"] = user.get("phone", "")
 
             # Lưu cookies
             COOKIES["username"] = st.session_state["username"]
@@ -64,9 +59,12 @@ if not st.session_state["username"]:
             COOKIES.save()
 
             st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
-            st.session_state["rerun_needed"] = True
+            st.experimental_rerun()  # reload app để sidebar nhận thông tin
         else:
             st.error("❌ Sai username hoặc password")
+
+    st.button("🚀 Login", on_click=handle_login)
+
 
 else:
     # Sidebar hiển thị thông tin user
