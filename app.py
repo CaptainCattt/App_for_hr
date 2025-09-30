@@ -94,67 +94,70 @@ else:
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
 
-        # 1️⃣ Chọn loại nghỉ chính
-        leave_type = st.radio(
-            "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
-            ("Nghỉ phép năm", "Nghỉ không hưởng lương",
-             "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
-            index=0,
-            horizontal=True
-        )
+        with st.form("leave_form"):
+            # 1️⃣ Chọn loại nghỉ chính
+            leave_type = st.radio(
+                "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
+                ("Nghỉ phép năm", "Nghỉ không hưởng lương",
+                 "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
+                index=0,
+                horizontal=True
+            )
 
-        # 2️⃣ Chọn sub-option theo loại nghỉ
-        leave_case = ""
-        if leave_type == "Nghỉ phép năm":
-            leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
-        elif leave_type == "Nghỉ không hưởng lương":
-            leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
-                "Do hết phép năm", "Do việc cá nhân thời gian dài"])
-        elif leave_type == "Nghỉ hưởng BHXH":
-            leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
-                "Bản thân ốm",
-                "Con ốm",
-                "Bản thân ốm dài ngày",
-                "Chế độ thai sản cho nữ",
-                "Chế độ thai sản cho nam",
-                "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
-                "Suy giảm khả năng lao động (15% - trên 51%)"
-            ])
-        elif leave_type == "Nghỉ việc riêng có hưởng lương":
-            leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
-                "Bản thân kết hôn",
-                "Con kết hôn",
-                "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
-            ])
+            # 2️⃣ Sub-option
+            leave_case = ""
+            if leave_type == "Nghỉ phép năm":
+                leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
+            elif leave_type == "Nghỉ không hưởng lương":
+                leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
+                    "Do hết phép năm", "Do việc cá nhân thời gian dài"])
+            elif leave_type == "Nghỉ hưởng BHXH":
+                leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
+                    "Bản thân ốm",
+                    "Con ốm",
+                    "Bản thân ốm dài ngày",
+                    "Chế độ thai sản cho nữ",
+                    "Chế độ thai sản cho nam",
+                    "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
+                    "Suy giảm khả năng lao động (15% - trên 51%)"
+                ])
+            elif leave_type == "Nghỉ việc riêng có hưởng lương":
+                leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
+                    "Bản thân kết hôn",
+                    "Con kết hôn",
+                    "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
+                ])
 
-        # 3️⃣ Số ngày + Ngày bắt đầu / kết thúc
-        col1, col2, col3 = st.columns(3)
-        duration = col1.number_input(
-            "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0
-        )
-        start_date = col2.date_input("Ngày bắt đầu nghỉ", value=date.today())
-        end_date_default = start_date + timedelta(days=int(duration) - 1)
-        end_date = col3.date_input(
-            "Ngày kết thúc nghỉ", value=end_date_default)
+            # 3️⃣ Số ngày + Ngày bắt đầu / kết thúc
+            col1, col2, col3 = st.columns(3)
+            duration = col1.number_input(
+                "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0
+            )
+            start_date = col2.date_input(
+                "Ngày bắt đầu nghỉ", value=date.today())
+            end_date_default = start_date + timedelta(days=int(duration) - 1)
+            end_date = col3.date_input(
+                "Ngày kết thúc nghỉ", value=end_date_default)
 
-        # 4️⃣ Lý do chi tiết
-        reason_text = st.text_area("📝 Lý do chi tiết", height=100)
+            # 4️⃣ Lý do chi tiết
+            reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
-        # 5️⃣ Nút gửi
-        if st.button("📨 Gửi yêu cầu"):
-            if not reason_text.strip():
-                st.warning("Vui lòng nhập lý do nghỉ")
-            else:
-                send_leave_request(
-                    st.session_state["username"],
-                    start_date,
-                    end_date,
-                    duration,
-                    reason_text,
-                    leave_type,
-                    leave_case
-                )
-                st.success("Yêu cầu nghỉ đã được gửi!")
+            # 5️⃣ Nút gửi trong form
+            submitted = st.form_submit_button("📨 Gửi yêu cầu")
+            if submitted:
+                if not reason_text.strip():
+                    st.warning("Vui lòng nhập lý do nghỉ")
+                else:
+                    send_leave_request(
+                        st.session_state["username"],
+                        start_date,
+                        end_date,
+                        duration,
+                        reason_text,
+                        leave_type,
+                        leave_case
+                    )
+                    st.success("Yêu cầu nghỉ đã được gửi!")
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
