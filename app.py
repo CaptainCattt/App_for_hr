@@ -91,28 +91,37 @@ else:
         tab2 = None  # nhân viên không thấy tab quản lý
 
     # --- Tab xin nghỉ ---
+    # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
 
-        with st.form("leave_form"):
-            # 1️⃣ Chọn loại nghỉ chính
-            leave_type = st.radio(
-                "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
-                ("Nghỉ phép năm", "Nghỉ không hưởng lương",
-                 "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
-                index=0,
-                horizontal=True
-            )
+        # --- Khởi tạo session_state cho leave_type & leave_case ---
+        if "leave_type" not in st.session_state:
+            st.session_state["leave_type"] = "Nghỉ phép năm"
+        if "leave_case" not in st.session_state:
+            st.session_state["leave_case"] = "Phép năm"
 
-            # 2️⃣ Sub-option
-            leave_case = ""
+        with st.form("leave_form"):
+            # 1️⃣ Chọn loại nghỉ chính (select button)
+            leave_type = st.selectbox(
+                "Chọn loại nghỉ",
+                ["Nghỉ phép năm", "Nghỉ không hưởng lương",
+                    "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"],
+                index=["Nghỉ phép năm", "Nghỉ không hưởng lương", "Nghỉ hưởng BHXH",
+                       "Nghỉ việc riêng có hưởng lương"].index(st.session_state["leave_type"]),
+                key="leave_type_select"
+            )
+            st.session_state["leave_type"] = leave_type
+
+            # 2️⃣ Sub-option theo loại nghỉ
+            leave_case_options = []
             if leave_type == "Nghỉ phép năm":
-                leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
+                leave_case_options = ["Phép năm"]
             elif leave_type == "Nghỉ không hưởng lương":
-                leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
-                    "Do hết phép năm", "Do việc cá nhân thời gian dài"])
+                leave_case_options = ["Do hết phép năm",
+                                      "Do việc cá nhân thời gian dài"]
             elif leave_type == "Nghỉ hưởng BHXH":
-                leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
+                leave_case_options = [
                     "Bản thân ốm",
                     "Con ốm",
                     "Bản thân ốm dài ngày",
@@ -120,13 +129,25 @@ else:
                     "Chế độ thai sản cho nam",
                     "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
                     "Suy giảm khả năng lao động (15% - trên 51%)"
-                ])
+                ]
             elif leave_type == "Nghỉ việc riêng có hưởng lương":
-                leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
+                leave_case_options = [
                     "Bản thân kết hôn",
                     "Con kết hôn",
                     "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
-                ])
+                ]
+
+            # Mặc định sub-option nếu chưa có hoặc không hợp lệ
+            if st.session_state["leave_case"] not in leave_case_options:
+                st.session_state["leave_case"] = leave_case_options[0]
+
+            leave_case = st.selectbox(
+                "Chọn lý do chi tiết",
+                leave_case_options,
+                index=leave_case_options.index(st.session_state["leave_case"]),
+                key="leave_case_select"
+            )
+            st.session_state["leave_case"] = leave_case
 
             # 3️⃣ Số ngày + Ngày bắt đầu / kết thúc
             col1, col2, col3 = st.columns(3)
@@ -142,7 +163,7 @@ else:
             # 4️⃣ Lý do chi tiết
             reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
-            # 5️⃣ Nút gửi trong form
+            # 5️⃣ Nút gửi
             submitted = st.form_submit_button("📨 Gửi yêu cầu")
             if submitted:
                 if not reason_text.strip():
@@ -154,10 +175,10 @@ else:
                         end_date,
                         duration,
                         reason_text,
-                        leave_type,
-                        leave_case
+                        st.session_state["leave_type"],
+                        st.session_state["leave_case"]
                     )
-                    st.success("Yêu cầu nghỉ đã được gửi!")
+                    st.success("✅ Yêu cầu nghỉ đã được gửi!")
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
