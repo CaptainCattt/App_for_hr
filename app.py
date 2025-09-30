@@ -24,7 +24,8 @@ def register(username, password, role="employee"):
     if users_col.find_one({"username": username}):
         return False
     users_col.insert_one(
-        {"username": username, "password": password, "role": role})
+        {"username": username, "password": password, "role": role}
+    )
     return True
 
 
@@ -44,81 +45,108 @@ def view_leaves(username=None):
 
 
 def update_leave_status(leave_id, new_status):
-    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
-                          "$set": {"status": new_status}})
+    leaves_col.update_one(
+        {"_id": ObjectId(leave_id)},
+        {"$set": {"status": new_status}}
+    )
+
+# --- Helpers ---
+
+
+def status_badge(status: str):
+    colors = {
+        "pending": "🟡 Chờ duyệt",
+        "approved": "🟢 Đã duyệt",
+        "rejected": "🔴 Từ chối"
+    }
+    return colors.get(status, status)
 
 
 # --- Streamlit UI ---
-st.title("🚀 Leave Management System")
+st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
+st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
-    choice = st.radio("Bạn muốn:", ["Đăng nhập", "Đăng ký"])
+    st.markdown("### 👋 Chào mừng! Hãy đăng nhập hoặc đăng ký")
+
+    choice = st.radio("Bạn muốn:", ["Đăng nhập", "Đăng ký"], horizontal=True)
+
+    username = st.text_input("👤 Username")
+    password = st.text_input("🔑 Password", type="password")
 
     if choice == "Đăng nhập":
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Login"):
+        if st.button("🔓 Login"):
             user = login(username, password)
             if user:
                 st.session_state["username"] = user["username"]
                 st.session_state["role"] = user.get("role", "employee")
                 st.success(f"Xin chào {user['username']} 👋")
+                st.rerun()
             else:
                 st.error("Sai username hoặc password")
 
     else:  # Đăng ký
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Register"):
+        if st.button("📝 Register"):
             if register(username, password):
                 st.success("Đăng ký thành công! Hãy đăng nhập")
             else:
-                st.error("Username đã tồn tại!")
+                st.error("❌ Username đã tồn tại!")
 
 else:
-    st.write(
-        f"Bạn đang đăng nhập với tài khoản: {st.session_state['username']} ({st.session_state['role']})")
+    st.sidebar.success(
+        f"👤 {st.session_state['username']} ({st.session_state['role']})")
+    if st.sidebar.button("🚪 Đăng xuất"):
+        st.session_state.clear()
+        st.rerun()
 
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
 
     with tab1:
+        st.subheader("📝 Gửi yêu cầu nghỉ")
         date = st.date_input("Ngày nghỉ")
         reason = st.text_area("Lý do")
-        if st.button("Gửi yêu cầu"):
+        if st.button("📨 Gửi yêu cầu"):
             request_leave(st.session_state["username"], str(date), reason)
-            st.success("Đã gửi yêu cầu nghỉ!")
+            st.success("✅ Đã gửi yêu cầu nghỉ!")
 
-        st.subheader("Lịch sử xin nghỉ")
-        for leave in view_leaves(st.session_state["username"]):
-            st.write(
-                f"- {leave['date']} | {leave['reason']} | {leave['status']}")
+        st.divider()
+        st.subheader("📜 Lịch sử xin nghỉ")
+        leaves = view_leaves(st.session_state["username"])
+        if not leaves:
+            st.info("Bạn chưa có yêu cầu nghỉ nào.")
+        else:
+            for leave in leaves:
+                with st.expander(f"{leave['date']} - {status_badge(leave['status'])}"):
+                    st.write(f"**Lý do:** {leave['reason']}")
 
     if st.session_state["role"] == "admin":
         with tab2:
-            st.subheader("Tất cả yêu cầu nghỉ")
+            st.subheader("📊 Quản lý yêu cầu nghỉ")
             all_leaves = view_leaves()
-            for leave in all_leaves:
-                col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
-                with col1:
-                    st.write(leave["username"])
-                with col2:
-                    st.write(leave["date"])
-                with col3:
-                    st.write(leave["reason"])
-                with col4:
-                    st.write(leave["status"])
+            if not all_leaves:
+                st.info("Chưa có yêu cầu nghỉ nào.")
+            else:
+                for leave in all_leaves:
+                    with st.container():
+                        col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
+                        col1.write(f"👤 {leave['username']}")
+                        col2.write(f"📅 {leave['date']}")
+                        col3.write(f"📝 {leave['reason']}")
+                        col4.write(status_badge(leave['status']))
 
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button(f"✅ Approve {leave['_id']}", key=f"a{leave['_id']}"):
-                        update_leave_status(leave["_id"], "approved")
-                        st.success(f"Đã duyệt nghỉ cho {leave['username']}")
-                        st.rerun()
-                with c2:
-                    if st.button(f"❌ Reject {leave['_id']}", key=f"r{leave['_id']}"):
-                        update_leave_status(leave["_id"], "rejected")
-                        st.warning(f"Đã từ chối nghỉ của {leave['username']}")
-                        st.rerun()
-
-    if st.button("Đăng xuất"):
-        st.session_state.clear()
+                        if leave["status"] == "pending":
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                if st.button(f"✅ Duyệt", key=f"a{leave['_id']}"):
+                                    update_leave_status(
+                                        leave["_id"], "approved")
+                                    st.success(
+                                        f"Đã duyệt nghỉ cho {leave['username']}")
+                                    st.rerun()
+                            with c2:
+                                if st.button(f"❌ Từ chối", key=f"r{leave['_id']}"):
+                                    update_leave_status(
+                                        leave["_id"], "rejected")
+                                    st.warning(
+                                        f"Đã từ chối nghỉ của {leave['username']}")
+                                    st.rerun()
