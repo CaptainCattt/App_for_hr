@@ -55,10 +55,8 @@ def view_leaves(username=None):
 
 
 def update_leave_status(leave_id, new_status):
-    leaves_col.update_one(
-        {"_id": ObjectId(leave_id)},
-        {"$set": {"status": new_status}}
-    )
+    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
+                          "$set": {"status": new_status}})
 
 
 def status_badge(status: str):
@@ -81,12 +79,17 @@ if "username" not in st.session_state:
         st.session_state["role"] = cookies.get("role")
 
 # --- Flags for rerun ---
+if "rerun_needed" not in st.session_state:
+    st.session_state["rerun_needed"] = False
 if "leave_submitted" not in st.session_state:
     st.session_state["leave_submitted"] = False
-if "logout_trigger" not in st.session_state:
-    st.session_state["logout_trigger"] = False
-if "login_trigger" not in st.session_state:
-    st.session_state["login_trigger"] = False
+
+# --- Rerun if flag set ---
+if st.session_state.get("rerun_needed"):
+    with st.spinner("⏳ Đang xử lý, vui lòng đợi..."):
+        time.sleep(1)
+    st.session_state["rerun_needed"] = False
+    st.experimental_rerun()
 
 # --- Logout callback ---
 
@@ -96,7 +99,7 @@ def logout():
     cookies["username"] = ""
     cookies["role"] = ""
     cookies.save()
-    st.session_state["logout_trigger"] = True
+    st.session_state["rerun_needed"] = True
 
 # --- Login callback ---
 
@@ -109,7 +112,7 @@ def do_login(username, password):
         cookies["username"] = user["username"]
         cookies["role"] = user.get("role", "employee")
         cookies.save()
-        st.session_state["login_trigger"] = True
+        st.session_state["rerun_needed"] = True
     else:
         st.error("❌ Sai username hoặc password")
 
@@ -118,19 +121,19 @@ def do_login(username, password):
 
 def send_leave_request(leave_date, reason):
     request_leave(st.session_state["username"], str(leave_date), reason)
-    st.session_state["leave_submitted"] = True
+    st.session_state["rerun_needed"] = True
 
 # --- Approve/Reject callbacks ---
 
 
 def approve_leave(l_id, user_name):
     update_leave_status(l_id, "approved")
-    st.session_state["leave_submitted"] = True
+    st.session_state["rerun_needed"] = True
 
 
 def reject_leave(l_id, user_name):
     update_leave_status(l_id, "rejected")
-    st.session_state["leave_submitted"] = True
+    st.session_state["rerun_needed"] = True
 
 
 # --- Login UI ---
@@ -140,25 +143,11 @@ if "username" not in st.session_state:
     password = st.text_input("🔑 Password", type="password")
     st.button("🚀 Login", on_click=do_login, args=(username, password))
 
-    # Trigger rerun after login
-    if st.session_state.get("login_trigger"):
-        with st.spinner("⏳ Đang đăng nhập..."):
-            time.sleep(1)
-        st.session_state["login_trigger"] = False
-        st.experimental_rerun()
-
 else:
     # Sidebar user info
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
-
-    # Trigger rerun after logout
-    if st.session_state.get("logout_trigger"):
-        with st.spinner("⏳ Đang đăng xuất..."):
-            time.sleep(2)
-        st.session_state["logout_trigger"] = False
-        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
@@ -170,13 +159,6 @@ else:
         reason = st.text_area("Lý do")
         st.button("📨 Gửi yêu cầu", on_click=send_leave_request,
                   args=(leave_date, reason))
-
-        # Trigger rerun after leave submission
-        if st.session_state.get("leave_submitted"):
-            with st.spinner("⏳ Đang gửi yêu cầu nghỉ..."):
-                time.sleep(1)
-            st.session_state["leave_submitted"] = False
-            st.experimental_rerun()
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
