@@ -60,6 +60,21 @@ def get_summary():
 # ------------------ Streamlit UI -------------------
 st.title("🚀 Leave Management System")
 
+# 🔍 Debug check secrets
+if "DATABASE_URL" not in st.secrets:
+    st.error("DATABASE_URL is missing in Streamlit Secrets!")
+else:
+    st.write("✅ DATABASE_URL loaded, starts with:",
+             st.secrets["DATABASE_URL"][:30])
+
+
+def get_connection():
+    db_url = st.secrets["DATABASE_URL"]
+    return psycopg2.connect(db_url, connect_timeout=10)
+
+# phần code app tiếp tục bên dưới...
+
+
 # Login
 if "user" not in st.session_state:
     st.subheader("Login")
