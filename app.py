@@ -179,7 +179,15 @@ else:
         if not leaves:
             st.info("Bạn chưa có yêu cầu nghỉ nào.")
         else:
-            for leave in leaves:
+            # Sắp xếp theo ngày, mới nhất lên trên
+            leaves_sorted = sorted(
+                leaves,
+                # hoặc datetime.strptime(x["date"], "%Y-%m-%d") nếu cần
+                key=lambda x: x["date"],
+                reverse=True
+            )
+
+            for leave in leaves_sorted:
                 with st.expander(f"{leave['date']} - {status_badge(leave['status'])}"):
                     st.write(f"**Lý do:** {leave['reason']}")
 
