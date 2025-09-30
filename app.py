@@ -54,8 +54,6 @@ if not st.session_state.get("username", ""):
             st.session_state["remaining_days"] = user.get("remaining_days", 12)
             st.session_state["department"] = user.get("department", "")
             st.session_state["position"] = user.get("position", "")
-            st.session_state["dob"] = user.get("dob", "")
-            st.session_state["phone"] = user.get("phone", "")
 
             # Lưu cookies
             COOKIES["username"] = st.session_state["username"]
@@ -63,7 +61,8 @@ if not st.session_state.get("username", ""):
             COOKIES.save()
 
             st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
-            st.experimental_rerun()  # reload UI để sidebar nhận dữ liệu
+            # reload UI để sidebar nhận dữ liệu
+            st.session_state["rerun_needed"] = True
         else:
             st.error("❌ Sai username hoặc password")
 
@@ -77,8 +76,7 @@ else:
     st.sidebar.write(f"**Chức vụ:** {st.session_state.get('position', '')}")
     st.sidebar.write(
         f"**Phòng ban:** {st.session_state.get('department', '')}")
-    st.sidebar.write(f"**Ngày sinh:** {st.session_state.get('dob', '')}")
-    st.sidebar.write(f"**SĐT:** {st.session_state.get('phone', '')}")
+
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state.get('remaining_days', 0)}")
 
