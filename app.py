@@ -199,11 +199,14 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                for leave in all_leaves:
+                # Sắp xếp theo ngày, mới nhất lên trên
+                all_leaves_sorted = sorted(
+                    all_leaves, key=lambda x: x["date"], reverse=True)
+
+                for leave in all_leaves_sorted:
                     with st.container():
                         st.markdown("---")
 
-                        # Dòng thông tin: Username, Ngày, Status
                         # Dòng thông tin: Username, Ngày, Status
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
                         col1.write(f"👤 {leave['username']}")
@@ -215,11 +218,10 @@ else:
                         st.write(f"📝 {leave['reason']}")
 
                         # Dòng trống để tách các yêu cầu nghỉ
-                        # hoặc st.markdown("<br>", unsafe_allow_html=True)
                         st.write("")
                         st.write("")
 
-                        # Hai nút duyệt/từ chối luôn nằm **cùng dòng cuối**
+                        # Hai nút duyệt/từ chối luôn nằm cùng dòng cuối
                         if leave["status"] == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
