@@ -69,13 +69,20 @@ def status_badge(status: str):
     return colors.get(status, status)
 
 
+# --- Đầu file ---
 if "rerun_needed" not in st.session_state:
     st.session_state["rerun_needed"] = False
 
 # --- Sau restore session ---
 if st.session_state.get("rerun_needed"):
     st.session_state["rerun_needed"] = False
-    st.experimental_rerun()
+    # Dùng st.experimental_rerun chỉ khi Streamlit đã sẵn sàng
+    # Cách an toàn: bọc trong try/except
+    try:
+        st.experimental_rerun()
+    except AttributeError:
+        pass
+
 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
