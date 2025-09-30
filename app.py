@@ -67,10 +67,43 @@ st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
-    st.markdown("### 👋 Chào mừng! Hãy đăng nhập hoặc đăng ký")
+    # CSS cho form đẹp hơn
+    st.markdown("""
+        <style>
+        .login-box {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            max-width: 400px;
+            margin: auto;
+        }
+        .stTextInput>div>div>input {
+            border-radius: 10px;
+            border: 1px solid #d3d3d3;
+            padding: 10px;
+        }
+        .stButton>button {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 10px 20px;
+            border: none;
+            transition: 0.3s;
+        }
+        .stButton>button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Hiển thị form login/register
+    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+    st.markdown("### 🔑 Đăng nhập / Đăng ký")
 
     choice = st.radio("Bạn muốn:", ["Đăng nhập", "Đăng ký"], horizontal=True)
-
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
@@ -83,14 +116,17 @@ if "username" not in st.session_state:
                 st.success(f"Xin chào {user['username']} 👋")
                 st.rerun()
             else:
-                st.error("Sai username hoặc password")
+                st.error("❌ Sai username hoặc password")
 
     else:  # Đăng ký
         if st.button("📝 Register"):
             if register(username, password):
-                st.success("Đăng ký thành công! Hãy đăng nhập")
+                st.success("🎉 Đăng ký thành công! Hãy đăng nhập")
             else:
-                st.error("❌ Username đã tồn tại!")
+                st.error("⚠️ Username đã tồn tại!")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 else:
     st.sidebar.success(
