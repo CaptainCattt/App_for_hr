@@ -143,6 +143,7 @@ def do_login(username, password):
         placeholder.error("❌ Sai username hoặc password")
     time.sleep(3)
     placeholder.empty()
+    st.session_state["rerun_needed"] = True
 
 
 def logout():

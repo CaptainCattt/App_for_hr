@@ -49,7 +49,7 @@ if not st.session_state.get("username"):
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    st.button("🚀 Login", on_click=login)
+    st.button("🚀 Login", on_click=do_login)
 
 else:
     # --- Sidebar thông tin user ---
