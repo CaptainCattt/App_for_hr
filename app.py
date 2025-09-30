@@ -80,6 +80,14 @@ if "username" not in st.session_state:
         st.session_state["username"] = cookies.get("username")
         st.session_state["role"] = cookies.get("role")
 
+# --- Flags for rerun ---
+if "leave_submitted" not in st.session_state:
+    st.session_state["leave_submitted"] = False
+if "logout_trigger" not in st.session_state:
+    st.session_state["logout_trigger"] = False
+if "login_trigger" not in st.session_state:
+    st.session_state["login_trigger"] = False
+
 # --- Logout callback ---
 
 
@@ -88,9 +96,41 @@ def logout():
     cookies["username"] = ""
     cookies["role"] = ""
     cookies.save()
-    with st.spinner("⏳ Đang đăng xuất, vui lòng đợi..."):
-        time.sleep(3)
-    st.experimental_rerun()
+    st.session_state["logout_trigger"] = True
+
+# --- Login callback ---
+
+
+def do_login(username, password):
+    user = login(username, password)
+    if user:
+        st.session_state["username"] = user["username"]
+        st.session_state["role"] = user.get("role", "employee")
+        cookies["username"] = user["username"]
+        cookies["role"] = user.get("role", "employee")
+        cookies.save()
+        st.session_state["login_trigger"] = True
+    else:
+        st.error("❌ Sai username hoặc password")
+
+# --- Leave request callback ---
+
+
+def send_leave_request(leave_date, reason):
+    request_leave(st.session_state["username"], str(leave_date), reason)
+    st.session_state["leave_submitted"] = True
+
+# --- Approve/Reject callbacks ---
+
+
+def approve_leave(l_id, user_name):
+    update_leave_status(l_id, "approved")
+    st.session_state["leave_submitted"] = True
+
+
+def reject_leave(l_id, user_name):
+    update_leave_status(l_id, "rejected")
+    st.session_state["leave_submitted"] = True
 
 
 # --- Login UI ---
@@ -98,30 +138,27 @@ if "username" not in st.session_state:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
+    st.button("🚀 Login", on_click=do_login, args=(username, password))
 
-    def do_login():
+    # Trigger rerun after login
+    if st.session_state.get("login_trigger"):
         with st.spinner("⏳ Đang đăng nhập..."):
             time.sleep(1)
-            user = login(username, password)
-            if user:
-                st.session_state["username"] = user["username"]
-                st.session_state["role"] = user.get("role", "employee")
-                cookies["username"] = user["username"]
-                cookies["role"] = user.get("role", "employee")
-                cookies.save()
-                st.success(f"Xin chào {user['username']} 👋")
-                time.sleep(1)
-                st.experimental_rerun()
-            else:
-                st.error("❌ Sai username hoặc password")
-
-    st.button("🚀 Login", on_click=do_login)
+        st.session_state["login_trigger"] = False
+        st.experimental_rerun()
 
 else:
     # Sidebar user info
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
+
+    # Trigger rerun after logout
+    if st.session_state.get("logout_trigger"):
+        with st.spinner("⏳ Đang đăng xuất..."):
+            time.sleep(2)
+        st.session_state["logout_trigger"] = False
+        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
@@ -131,17 +168,15 @@ else:
         st.subheader("📝 Gửi yêu cầu nghỉ")
         leave_date = st.date_input("Ngày nghỉ", value=date.today())
         reason = st.text_area("Lý do")
+        st.button("📨 Gửi yêu cầu", on_click=send_leave_request,
+                  args=(leave_date, reason))
 
-        def send_leave_request():
+        # Trigger rerun after leave submission
+        if st.session_state.get("leave_submitted"):
             with st.spinner("⏳ Đang gửi yêu cầu nghỉ..."):
                 time.sleep(1)
-                request_leave(
-                    st.session_state["username"], str(leave_date), reason)
-                st.success("✅ Đã gửi yêu cầu nghỉ!")
-                time.sleep(1)
-                st.experimental_rerun()
-
-        st.button("📨 Gửi yêu cầu", on_click=send_leave_request)
+            st.session_state["leave_submitted"] = False
+            st.experimental_rerun()
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
@@ -170,28 +205,16 @@ else:
                         col4.write(status_badge(leave['status']))
 
                         if leave["status"] == "pending":
-                            def approve_leave(l_id=leave["_id"], user_name=leave["username"]):
-                                with st.spinner(f"⏳ Đang duyệt nghỉ cho {user_name}..."):
-                                    time.sleep(1)
-                                    update_leave_status(l_id, "approved")
-                                    st.success(
-                                        f"Đã duyệt nghỉ cho {user_name}")
-                                    time.sleep(1)
-                                    st.experimental_rerun()
-
-                            def reject_leave(l_id=leave["_id"], user_name=leave["username"]):
-                                with st.spinner(f"⏳ Đang từ chối nghỉ của {user_name}..."):
-                                    time.sleep(1)
-                                    update_leave_status(l_id, "rejected")
-                                    st.warning(
-                                        f"Đã từ chối nghỉ của {user_name}")
-                                    time.sleep(1)
-                                    st.experimental_rerun()
-
                             c1, c2 = st.columns(2)
                             with c1:
                                 st.button(
-                                    "✅ Duyệt", key=f"a{leave['_id']}", on_click=approve_leave)
+                                    "✅ Duyệt", key=f"a{leave['_id']}",
+                                    on_click=approve_leave,
+                                    args=(leave["_id"], leave["username"])
+                                )
                             with c2:
                                 st.button(
-                                    "❌ Từ chối", key=f"r{leave['_id']}", on_click=reject_leave)
+                                    "❌ Từ chối", key=f"r{leave['_id']}",
+                                    on_click=reject_leave,
+                                    args=(leave["_id"], leave["username"])
+                                )
