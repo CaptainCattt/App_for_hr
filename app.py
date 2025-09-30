@@ -37,6 +37,9 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
+if "login_success" not in st.session_state:
+    st.session_state["login_success"] = False
+
 # --- Login UI ---
 if not st.session_state.get("username", ""):
     st.markdown("## 🔑 Đăng nhập hệ thống")
@@ -64,15 +67,15 @@ if not st.session_state.get("username", ""):
                 f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
 
             # Dùng flag để rerun ở luồng chính
-            st.rerun()
+            st.session_state["login_success"] = True
         else:
             st.error("❌ Sai username hoặc password")
 
     st.button("🚀 Login", on_click=handle_login)
 
-    # Luồng chính kiểm tra flag
-    if st.session_state.get("rerun_needed"):
-        st.session_state["rerun_needed"] = False
+    # Nếu login thành công → rerun app
+    if st.session_state.get("login_success"):
+        st.session_state["login_success"] = False
         st.experimental_rerun()
 
 else:
