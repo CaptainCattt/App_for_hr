@@ -135,16 +135,27 @@ else:
 
         if now_ts - last_sent < cooldown:
             remaining = int(cooldown - (now_ts - last_sent))
-            st.warning(
+            warning_placeholder = st.empty()
+            warning_placeholder.warning(
                 f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+            # 3 giây sau xóa thông báo
+            time.sleep(3)
+            warning_placeholder.empty()
             can_send = False
         else:
             can_send = True
 
         if st.button("📨 Gửi yêu cầu") and can_send:
             if not reason_text.strip():
-                st.warning("Vui lòng nhập lý do nghỉ")
+                warning_placeholder = st.empty()
+                warning_placeholder.warning("⚠️ Vui lòng nhập lý do nghỉ")
+                time.sleep(3)
+                warning_placeholder.empty()
             else:
+                placeholder = st.empty()
+                with placeholder:
+                    st.info("📨 Đang gửi yêu cầu...")
+                time.sleep(0.5)
                 send_leave_request(
                     st.session_state["username"],
                     start_date,
@@ -154,9 +165,10 @@ else:
                     leave_type,
                     leave_case
                 )
-                st.success("📤 Yêu cầu nghỉ đã được gửi!")
-                # cập nhật timestamp
+                placeholder.success("📤 Yêu cầu nghỉ đã được gửi!")
                 st.session_state["last_leave_request"] = now_ts
+                time.sleep(3)
+                placeholder.empty()
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
