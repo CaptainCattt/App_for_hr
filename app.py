@@ -84,7 +84,7 @@ else:
     # --- Tabs ---
     # --- Tabs ---
     if st.session_state["role"] == "admin":
-        tab1, tab2, tab3 = st.tabs(
+        tab1, tab3, tab2 = st.tabs(
             ["📅 Xin nghỉ", "📜 Lịch sử đã xin", "📋 Quản lý"])
     else:
         tab1, tab3 = st.tabs(["📅 Xin nghỉ", "📜 Lịch sử đã xin"])
