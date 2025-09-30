@@ -150,39 +150,7 @@ else:
                     leave_type,
                     leave_case
                 )
-    with tab3:
-        st.subheader("📜 Lịch sử yêu cầu đã xin")
-        # Lấy danh sách yêu cầu của chính nhân viên
-        user_leaves = sorted(
-            view_leaves(st.session_state["username"]),
-            key=lambda x: x.get("start_date", "1900-01-01"),
-            reverse=True
-        )
 
-        if not user_leaves:
-            st.info("Bạn chưa có yêu cầu nghỉ nào.")
-        else:
-            for leave in user_leaves:
-                start = leave.get("start_date", "")
-                end = leave.get("end_date", "")
-                duration = leave.get("duration", "")
-                leave_type = leave.get("leave_type", "")
-                leave_case = leave.get("leave_case", "")
-                approved_by = leave.get("approved_by", "Chưa duyệt")
-                approved_at = leave.get("approved_at", "")
-
-                col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
-                col1.write(f"📅 {start} → {end} ({duration} ngày)")
-                col2.write(f"📝 {leave_type} / {leave_case}")
-                col3.write(f"♾️Trạng thái: {status_badge(leave['status'])}")
-                col4.write(
-                    f"✅ Duyệt bởi: {approved_by}" if approved_by != "Chưa duyệt" else "")
-
-                st.write(f"📝 Lý do: {leave['reason']}")
-                if approved_at:
-                    st.write(f"🕒 Duyệt lúc: {approved_at}")
-
-                st.markdown("---")
     # --- Tab quản lý admin ---
     if tab2 is not None:
         with tab2:
@@ -233,3 +201,37 @@ else:
                                     on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
                                         l_id, u)
                                 )
+
+    with tab3:
+        st.subheader("📜 Lịch sử yêu cầu đã xin")
+        # Lấy danh sách yêu cầu của chính nhân viên
+        user_leaves = sorted(
+            view_leaves(st.session_state["username"]),
+            key=lambda x: x.get("start_date", "1900-01-01"),
+            reverse=True
+        )
+
+        if not user_leaves:
+            st.info("Bạn chưa có yêu cầu nghỉ nào.")
+        else:
+            for leave in user_leaves:
+                start = leave.get("start_date", "")
+                end = leave.get("end_date", "")
+                duration = leave.get("duration", "")
+                leave_type = leave.get("leave_type", "")
+                leave_case = leave.get("leave_case", "")
+                approved_by = leave.get("approved_by", "Chưa duyệt")
+                approved_at = leave.get("approved_at", "")
+
+                col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
+                col1.write(f"📅 {start} → {end} ({duration} ngày)")
+                col2.write(f"📝 {leave_type} / {leave_case}")
+                col3.write(f"♾️Trạng thái: {status_badge(leave['status'])}")
+                col4.write(
+                    f"✅ Duyệt bởi: {approved_by}" if approved_by != "Chưa duyệt" else "")
+
+                st.write(f"📝 Lý do: {leave['reason']}")
+                if approved_at:
+                    st.write(f"🕒 Duyệt lúc: {approved_at}")
+
+                st.markdown("---")
