@@ -64,7 +64,7 @@ if not st.session_state.get("username", ""):
                 f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
 
             # Dùng flag để rerun ở luồng chính
-            st.session_state["rerun_needed"] = True
+            st.rerun()
         else:
             st.error("❌ Sai username hoặc password")
 
