@@ -14,6 +14,16 @@ if "username" not in st.session_state and COOKIES.get("username"):
     st.session_state["username"] = COOKIES.get("username")
     st.session_state["role"] = COOKIES.get("role")
 
+# --- Flags ---
+if "rerun_needed" not in st.session_state:
+    st.session_state["rerun_needed"] = False
+
+if st.session_state.get("rerun_needed"):
+    st.session_state["rerun_needed"] = False
+    try:
+        st.experimental_rerun()
+    except AttributeError:
+        pass
 
 # --- Khởi tạo session state mặc định để tránh KeyError ---
 for key, default in {
@@ -27,6 +37,8 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
+if "login_success" not in st.session_state:
+    st.session_state["login_success"] = False
 
 # --- Login UI ---
 if not st.session_state.get("username", ""):
@@ -51,14 +63,23 @@ if not st.session_state.get("username", ""):
             COOKIES["role"] = st.session_state["role"]
             COOKIES.save()
 
-            st.success(
-                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
-
+            # Hiện thông báo
+            st.session_state["login_message"] = f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!"
+            st.session_state["login_success"] = True
         else:
             st.error("❌ Sai username hoặc password")
 
     st.button("🚀 Login", on_click=handle_login)
 
+    # --- Trigger rerun nếu login thành công ---
+    if st.session_state.get("login_success"):
+        # Hiện thông báo trước khi rerun
+        st.success(st.session_state.get("login_message", ""))
+        # Reset flag trước khi reload
+        st.session_state["login_success"] = False
+        st.session_state["login_message"] = ""
+        # Rerun app
+        st.experimental_rerun()
 
 else:
     # --- Sidebar hiển thị thông tin user ---
