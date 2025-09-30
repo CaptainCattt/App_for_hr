@@ -81,10 +81,12 @@ else:
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # --- Tabs ---
+    # --- Tabs ---
     if st.session_state["role"] == "admin":
         tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
     else:
-        tab1 = st.tab("📅 Xin nghỉ")
+        tabs = st.tabs(["📅 Xin nghỉ"])  # nhân viên chỉ thấy 1 tab
+        tab1 = tabs[0]
         tab2 = None
 
     # --- Tab xin nghỉ ---
