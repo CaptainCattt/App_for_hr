@@ -49,27 +49,7 @@ if not st.session_state.get("username"):
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    def handle_login():
-        user = login(username, password)
-        if user:
-            st.session_state.update({
-                "username": user.get("username", ""),
-                "full_name": user.get("full_name", username),
-                "role": user.get("role", "employee"),
-                "remaining_days": user.get("remaining_days", 12),
-                "department": user.get("department", ""),
-                "position": user.get("position", "")
-            })
-            # Lưu cookies
-            COOKIES["username"] = st.session_state["username"]
-            COOKIES["role"] = st.session_state["role"]
-            COOKIES.save()
-            st.success(
-                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
-        else:
-            st.error("❌ Sai username hoặc password")
-
-    st.button("🚀 Login", on_click=handle_login)
+    st.button("🚀 Login", on_click=login)
 
 else:
     # --- Sidebar thông tin user ---
