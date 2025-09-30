@@ -1,4 +1,5 @@
 # db.py
+import streamlit as st
 import os
 from dotenv import load_dotenv
 import psycopg2
@@ -8,8 +9,7 @@ DB_URL = os.getenv("DATABASE_URL")
 
 
 def get_connection():
-    if not DB_URL:
-        raise RuntimeError(
-            "DATABASE_URL not set. Check .env or environment secrets.")
-    # Optional: tăng timeout hoặc set sslmode nếu Supabase yêu cầu
-    return psycopg2.connect(DB_URL, connect_timeout=10)
+    db_url = st.secrets["DATABASE_URL"]
+    st.sidebar.write("DB_URL prefix:", st.secrets["DATABASE_URL"][:50] + "...")
+
+    return psycopg2.connect(db_url, connect_timeout=10)
