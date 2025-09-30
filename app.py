@@ -81,6 +81,7 @@ if "username" not in st.session_state:
 # --- Flags for rerun ---
 if "rerun_needed" not in st.session_state:
     st.session_state["rerun_needed"] = False
+
 if "leave_submitted" not in st.session_state:
     st.session_state["leave_submitted"] = False
 
@@ -90,8 +91,6 @@ if st.session_state.get("rerun_needed"):
 
 
 # --- Logout callback ---
-
-
 def do_login(username, password):
     user = login(username, password)
     if user:
@@ -100,7 +99,6 @@ def do_login(username, password):
         cookies["username"] = user["username"]
         cookies["role"] = user.get("role", "employee")
         cookies.save()
-        st.session_state["rerun_needed"] = True
     else:
         st.error("❌ Sai username hoặc password")
 
