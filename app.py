@@ -95,7 +95,7 @@ else:
         st.subheader("📝 Gửi yêu cầu nghỉ")
 
         with st.form("leave_form"):
-            # --- Loại nghỉ ---
+            # 1️⃣ Chọn loại nghỉ chính
             leave_type = st.radio(
                 "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
                 ("Nghỉ phép năm", "Nghỉ không hưởng lương",
@@ -104,7 +104,7 @@ else:
                 horizontal=True
             )
 
-            # --- Sub-option ---
+            # 2️⃣ Chọn sub-option dựa theo loại nghỉ đã chọn
             leave_case = ""
             if leave_type == "Nghỉ phép năm":
                 leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
@@ -128,7 +128,7 @@ else:
                     "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
                 ])
 
-            # --- Số ngày + Ngày bắt đầu / kết thúc ---
+            # 3️⃣ Số ngày + Ngày bắt đầu / kết thúc
             col1, col2, col3 = st.columns(3)
             duration = col1.number_input(
                 "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0
@@ -139,11 +139,11 @@ else:
             end_date = col3.date_input(
                 "Ngày kết thúc nghỉ", value=end_date_default)
 
-            # --- Lý do ---
+            # 4️⃣ Lý do chi tiết
             reason = st.expander("📝 Lý do chi tiết")
             reason_text = reason.text_area("Nhập lý do", height=100)
 
-            # --- Gửi yêu cầu ---
+            # 5️⃣ Nút gửi
             submitted = st.form_submit_button("📨 Gửi yêu cầu")
             if submitted:
                 if not reason_text.strip():
