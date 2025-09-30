@@ -111,22 +111,29 @@ def logout():
     cookies["username"] = ""
     cookies["role"] = ""
     cookies.save()
+    time.sleep(1)
     st.session_state["rerun_needed"] = True
 
 
 def send_leave_request(leave_date, reason):
-    request_leave(st.session_state["username"], str(leave_date), reason)
-    st.session_state["rerun_needed"] = True
+    with st.spinner("📨 Đang gửi yêu cầu..."):
+        time.sleep(1)  # giả lập delay nếu cần
+        request_leave(st.session_state["username"], str(leave_date), reason)
+        st.session_state["rerun_needed"] = True
 
 
 def approve_leave(l_id, user_name):
-    update_leave_status(l_id, "approved")
-    st.session_state["rerun_needed"] = True
+    with st.spinner("✅ Đang duyệt..."):
+        time.sleep(1)
+        update_leave_status(l_id, "approved")
+        st.session_state["rerun_needed"] = True
 
 
 def reject_leave(l_id, user_name):
-    update_leave_status(l_id, "rejected")
-    st.session_state["rerun_needed"] = True
+    with st.spinner("❌ Đang từ chối..."):
+        time.sleep(1)
+        update_leave_status(l_id, "rejected")
+        st.session_state["rerun_needed"] = True
 
 
 # --- Login UI ---
@@ -135,7 +142,8 @@ if "username" not in st.session_state:
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
     st.button("🚀 Login", on_click=do_login, args=(username, password))
-
+    time.sleep(1)
+    st.session_state["rerun_needed"] = True
 else:
     # Sidebar user info
     st.sidebar.success(
@@ -177,7 +185,7 @@ else:
 
                         # Dòng thông tin: Username, Ngày, Status
                         # Dòng thông tin: Username, Ngày, Status
-                        col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+                        col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {leave['date']}")
                         col3.empty()  # giữ khoảng trống
