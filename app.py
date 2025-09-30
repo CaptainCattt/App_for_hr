@@ -43,15 +43,17 @@ if st.session_state.get("leave_message"):
     st.session_state["leave_message"] = ""  # reset sau khi hiển thị
 
 # --- Login UI ---
-if not st.session_state["username"]:
-    username = st.text_input("👤 Username")
-    password = st.text_input("🔑 Password", type="password")
+if not st.session_state.get("username"):
+    st.markdown("## 🔑 Đăng nhập hệ thống")
+    username = st.text_input("👤 Username", key="login_username")
+    password = st.text_input(
+        "🔑 Password", type="password", key="login_password")
 
     if st.button("🚀 Login"):
         do_login(username, password)
 
 else:
-    # Sidebar info
+    # --- Sidebar thông tin user ---
     st.sidebar.markdown("## 👤 Thông tin nhân viên")
     st.sidebar.write(f"**Họ tên:** {st.session_state['full_name']}")
     st.sidebar.write(f"**Username:** {st.session_state['username']}")
@@ -59,6 +61,7 @@ else:
     st.sidebar.write(f"**Phòng ban:** {st.session_state['department']}")
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state['remaining_days']}")
+
     if st.sidebar.button("🚪 Đăng xuất"):
         logout()
 
