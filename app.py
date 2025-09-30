@@ -4,6 +4,7 @@ from settings import COOKIES
 from functions import *
 from bson import ObjectId
 import time
+from functools import partial
 
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
@@ -183,14 +184,19 @@ else:
                             st.write(
                                 f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
 
-                        if leave.get("status") == "pending":
+                        for leave in all_leaves:
+                            approve_callback = partial(
+                                approve_leave, leave["_id"], leave["username"])
+                            reject_callback = partial(
+                                reject_leave, leave["_id"], leave["username"])
+
                             btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
                                 st.button(
-                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(l_id, u))
+                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=approve_callback)
                             with btn_col2:
                                 st.button(
-                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(l_id, u))
+                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=reject_callback)
 
     # --- Tab lịch sử ---
     with tab3:
