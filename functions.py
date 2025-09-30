@@ -76,18 +76,28 @@ def approve_leave(l_id, user_name):
     with st.spinner("✅ Đang duyệt..."):
         time.sleep(0.5)
         leave = LEAVES_COL.find_one({"_id": ObjectId(l_id)})
-        update_leave_status(l_id, "approved")
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Cập nhật status, người duyệt và thời gian duyệt
+        LEAVES_COL.update_one(
+            {"_id": ObjectId(l_id)},
+            {"$set": {
+                "status": "approved",
+                "approved_by": st.session_state.get("full_name", "Admin"),
+                "approved_at": now_str
+            }}
+        )
 
         # Nếu là Nghỉ phép năm, trừ remaining_days
-        if leave["leave_type"] == "Nghỉ phép năm":
+        if leave.get("leave_type") == "Nghỉ phép năm":
             duration = float(leave.get("duration", 1))
             USERS_COL.update_one(
                 {"username": user_name},
                 {"$inc": {"remaining_days": -duration}}
             )
 
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.success(f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
+        st.success(
+            f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str} bởi {st.session_state.get('full_name', 'Admin')}!")
 
 
 def reject_leave(l_id, user_name):
