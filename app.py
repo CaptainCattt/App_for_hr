@@ -5,7 +5,6 @@ from functions import *
 from bson import ObjectId
 import time
 from functools import partial
-
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
@@ -50,7 +49,12 @@ if not st.session_state.get("username"):
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    st.button("🚀 Login", on_click=do_login)
+    st.button(
+        "🚀 Login",
+        on_click=partial(do_login,
+                         st.session_state.get("login_username", ""),
+                         st.session_state.get("login_password", ""))
+    )
 
 else:
     # --- Sidebar thông tin user ---
@@ -186,16 +190,12 @@ else:
 
                         if leave.get("status") == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
-                            approve_callback = partial(
-                                approve_leave, leave["_id"], leave["username"])
-                            reject_callback = partial(
-                                reject_leave, leave["_id"], leave["username"])
                             with btn_col1:
                                 st.button(
-                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=approve_callback)
+                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(l_id, u))
                             with btn_col2:
                                 st.button(
-                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=reject_callback)
+                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(l_id, u))
 
     # --- Tab lịch sử ---
     with tab3:
