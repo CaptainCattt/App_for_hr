@@ -103,29 +103,31 @@ else:
             horizontal=True
         )
 
-        # 2️⃣ Chọn sub-option theo loại nghỉ
-        leave_case = ""
-        if leave_type == "Nghỉ phép năm":
-            leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
-        elif leave_type == "Nghỉ không hưởng lương":
-            leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
-                "Do hết phép năm", "Do việc cá nhân thời gian dài"])
-        elif leave_type == "Nghỉ hưởng BHXH":
-            leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
-                "Bản thân ốm",
-                "Con ốm",
-                "Bản thân ốm dài ngày",
-                "Chế độ thai sản cho nữ",
-                "Chế độ thai sản cho nam",
-                "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
-                "Suy giảm khả năng lao động (15% - trên 51%)"
-            ])
-        elif leave_type == "Nghỉ việc riêng có hưởng lương":
-            leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
-                "Bản thân kết hôn",
-                "Con kết hôn",
-                "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
-            ])
+        # 2️⃣ Chọn sub-option trong container riêng
+        leave_case_container = st.container()
+        with leave_case_container:
+            leave_case = ""
+            if leave_type == "Nghỉ phép năm":
+                leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
+            elif leave_type == "Nghỉ không hưởng lương":
+                leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
+                    "Do hết phép năm", "Do việc cá nhân thời gian dài"])
+            elif leave_type == "Nghỉ hưởng BHXH":
+                leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
+                    "Bản thân ốm",
+                    "Con ốm",
+                    "Bản thân ốm dài ngày",
+                    "Chế độ thai sản cho nữ",
+                    "Chế độ thai sản cho nam",
+                    "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
+                    "Suy giảm khả năng lao động (15% - trên 51%)"
+                ])
+            elif leave_type == "Nghỉ việc riêng có hưởng lương":
+                leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
+                    "Bản thân kết hôn",
+                    "Con kết hôn",
+                    "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
+                ])
 
         # 3️⃣ Số ngày + Ngày bắt đầu / kết thúc
         col1, col2, col3 = st.columns(3)
