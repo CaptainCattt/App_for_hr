@@ -180,17 +180,18 @@ else:
                         col4.write(status_badge(leave['status']))
 
                         if leave["status"] == "pending":
-                            # Hai nút nằm cùng dòng ở cuối col4
-                            btn_col1, btn_col2 = st.columns([1, 1])
-                            with btn_col1:
-                                st.button(
-                                    "✅ Duyệt", key=f"a{leave['_id']}",
-                                    on_click=approve_leave,
-                                    args=(leave["_id"], leave["username"])
-                                )
-                            with btn_col2:
-                                st.button(
-                                    "❌ Từ chối", key=f"r{leave['_id']}",
-                                    on_click=reject_leave,
-                                    args=(leave["_id"], leave["username"])
-                                )
+                            # tạo 2 nút bên trong col4
+                            with col4:
+                                btn_col1, btn_col2 = st.columns([1, 1])
+                                with btn_col1:
+                                    st.button(
+                                        "✅ Duyệt", key=f"a{leave['_id']}",
+                                        on_click=approve_leave,
+                                        args=(leave["_id"], leave["username"])
+                                    )
+                                with btn_col2:
+                                    st.button(
+                                        "❌ Từ chối", key=f"r{leave['_id']}",
+                                        on_click=reject_leave,
+                                        args=(leave["_id"], leave["username"])
+                                    )
