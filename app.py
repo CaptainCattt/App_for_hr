@@ -61,8 +61,15 @@ if not st.session_state.get("username", ""):
             COOKIES.save()
 
             st.success(
-                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
-            st.session_state["rerun_needed"] = True
+                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!"
+            )
+
+            # Delay nhỏ để hiển thị thông báo
+            import time
+            time.sleep(0.5)
+
+            # Rerun app ngay lập tức
+            st.experimental_rerun()
         else:
             st.error("❌ Sai username hoặc password")
 
