@@ -113,20 +113,31 @@ def do_login(username, password):
     with placeholder:
         st.info("🔑 Đang đăng nhập...")
     time.sleep(0.5)
+
     user = USERS_COL.find_one({"username": username, "password": password})
     if user:
+        # Lưu thông tin session
         st.session_state["username"] = user["username"]
         st.session_state["role"] = user.get("role", "employee")
         st.session_state["full_name"] = user.get("full_name", user["username"])
+        st.session_state["position"] = user.get("position", "")
+        st.session_state["department"] = user.get("department", "")
+        st.session_state["remaining_days"] = user.get("remaining_days", 0)
+
+        # Lưu cookie
         COOKIES["username"] = user["username"]
         COOKIES["role"] = user.get("role", "employee")
         COOKIES.save()
+
         placeholder.success(
             f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
     else:
         placeholder.error("❌ Sai username hoặc password")
-    time.sleep(3)
+
+    time.sleep(1)
     placeholder.empty()
+
+    # Yêu cầu app rerun để cập nhật UI
     st.session_state["rerun_needed"] = True
 
 
