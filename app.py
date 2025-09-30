@@ -84,11 +84,6 @@ if "rerun_needed" not in st.session_state:
 if "leave_submitted" not in st.session_state:
     st.session_state["leave_submitted"] = False
 
-# --- Rerun if flag set ---
-if st.session_state.get("rerun_needed"):
-    with st.spinner("⏳ Đang xử lý, vui lòng đợi..."):
-        time.sleep(1)
-    st.session_state["rerun_needed"] = False
 
 # --- Logout callback ---
 
