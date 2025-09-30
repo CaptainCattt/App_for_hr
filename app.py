@@ -68,38 +68,6 @@ st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
     # CSS cho form login
-    st.markdown("""
-        <style>
-        .login-box {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-            max-width: 380px;
-            margin: 80px auto;
-            text-align: center;
-        }
-        .stTextInput>div>div>input {
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            padding: 12px;
-        }
-        .stButton>button {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            color: white;
-            font-weight: bold;
-            border-radius: 10px;
-            padding: 12px 24px;
-            border: none;
-            transition: 0.3s;
-            width: 100%;
-        }
-        .stButton>button:hover {
-            background: linear-gradient(90deg, #45a049, #3e8e41);
-            transform: scale(1.03);
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
     # Form Login
     st.markdown("<div class='login-box'>", unsafe_allow_html=True)
