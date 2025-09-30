@@ -173,9 +173,9 @@ else:
 
             col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
             col1.write(f"📅 {start} → {end} ({duration} ngày)")
-            col2.write(f"🗂 {leave_type} / {leave_case}")
-            col3.write(f"Trạng thái: {status_badge(leave['status'])}")
-            col4.write(f"✅ {approved_by}" if approved_by !=
+            col2.write(f"📝 {leave_type} / {leave_case}")
+            col3.write(f"♾️Trạng thái: {status_badge(leave['status'])}")
+            col4.write(f"✅ Duyệt bởi: {approved_by}" if approved_by !=
                        "Chưa duyệt" else "")
 
             st.write(f"📝 Lý do: {leave['reason']}")
