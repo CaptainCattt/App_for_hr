@@ -89,8 +89,8 @@ def logout():
     cookies["role"] = ""
     cookies.save()
     with st.spinner("⏳ Đang đăng xuất, vui lòng đợi..."):
-        time.sleep(5)  # delay 5 giây trước reload
-    st.rerun()
+        time.sleep(3)
+    st.experimental_rerun()
 
 
 # --- Login UI ---
@@ -100,18 +100,20 @@ if "username" not in st.session_state:
     password = st.text_input("🔑 Password", type="password")
 
     def do_login():
-        user = login(username, password)
-        if user:
-            st.session_state["username"] = user["username"]
-            st.session_state["role"] = user.get("role", "employee")
-            cookies["username"] = user["username"]
-            cookies["role"] = user.get("role", "employee")
-            cookies.save()
-            st.success(f"Xin chào {user['username']} 👋")
-            time.sleep(3)
-            st.rerun()
-        else:
-            st.error("❌ Sai username hoặc password")
+        with st.spinner("⏳ Đang đăng nhập..."):
+            time.sleep(1)
+            user = login(username, password)
+            if user:
+                st.session_state["username"] = user["username"]
+                st.session_state["role"] = user.get("role", "employee")
+                cookies["username"] = user["username"]
+                cookies["role"] = user.get("role", "employee")
+                cookies.save()
+                st.success(f"Xin chào {user['username']} 👋")
+                time.sleep(1)
+                st.experimental_rerun()
+            else:
+                st.error("❌ Sai username hoặc password")
 
     st.button("🚀 Login", on_click=do_login)
 
@@ -131,11 +133,13 @@ else:
         reason = st.text_area("Lý do")
 
         def send_leave_request():
-            request_leave(
-                st.session_state["username"], str(leave_date), reason)
-            st.success("✅ Đã gửi yêu cầu nghỉ!")
-            time.sleep(3)
-            st.rerun()
+            with st.spinner("⏳ Đang gửi yêu cầu nghỉ..."):
+                time.sleep(1)
+                request_leave(
+                    st.session_state["username"], str(leave_date), reason)
+                st.success("✅ Đã gửi yêu cầu nghỉ!")
+                time.sleep(1)
+                st.experimental_rerun()
 
         st.button("📨 Gửi yêu cầu", on_click=send_leave_request)
 
@@ -167,16 +171,22 @@ else:
 
                         if leave["status"] == "pending":
                             def approve_leave(l_id=leave["_id"], user_name=leave["username"]):
-                                update_leave_status(l_id, "approved")
-                                st.success(f"Đã duyệt nghỉ cho {user_name}")
-                                time.sleep(3)
-                                st.rerun()
+                                with st.spinner(f"⏳ Đang duyệt nghỉ cho {user_name}..."):
+                                    time.sleep(1)
+                                    update_leave_status(l_id, "approved")
+                                    st.success(
+                                        f"Đã duyệt nghỉ cho {user_name}")
+                                    time.sleep(1)
+                                    st.experimental_rerun()
 
                             def reject_leave(l_id=leave["_id"], user_name=leave["username"]):
-                                update_leave_status(l_id, "rejected")
-                                st.warning(f"Đã từ chối nghỉ của {user_name}")
-                                time.sleep(3)
-                                st.rerun()
+                                with st.spinner(f"⏳ Đang từ chối nghỉ của {user_name}..."):
+                                    time.sleep(1)
+                                    update_leave_status(l_id, "rejected")
+                                    st.warning(
+                                        f"Đã từ chối nghỉ của {user_name}")
+                                    time.sleep(1)
+                                    st.experimental_rerun()
 
                             c1, c2 = st.columns(2)
                             with c1:
