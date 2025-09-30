@@ -1,9 +1,10 @@
 # app.py
 import streamlit as st
-from datetime import date
+from datetime import date, timedelta, datetime
 from settings import COOKIES
 from functions import *
-from datetime import timedelta
+from bson import ObjectId
+import time
 
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
@@ -24,8 +25,7 @@ if st.session_state.get("rerun_needed"):
     except AttributeError:
         pass
 
-# --- Login UI ---
-# Khởi tạo session state mặc định để tránh KeyError
+# --- Khởi tạo session state mặc định để tránh KeyError ---
 for key, default in {
     "username": "",
     "full_name": "",
@@ -47,7 +47,6 @@ if not st.session_state.get("username", ""):
     def handle_login():
         user = login(username, password)
         if user:
-            # Lưu thông tin vào session
             st.session_state["username"] = user.get("username", "")
             st.session_state["full_name"] = user.get(
                 "full_name", st.session_state["username"])
@@ -61,8 +60,8 @@ if not st.session_state.get("username", ""):
             COOKIES["role"] = st.session_state["role"]
             COOKIES.save()
 
-            st.success(f"✅ Chào mừng {st.session_state["role"]} {st.session_state['full_name']} !")
-            # reload UI để sidebar nhận dữ liệu
+            st.success(
+                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
             st.session_state["rerun_needed"] = True
         else:
             st.error("❌ Sai username hoặc password")
@@ -77,20 +76,20 @@ else:
     st.sidebar.write(f"**Chức vụ:** {st.session_state.get('position', '')}")
     st.sidebar.write(
         f"**Phòng ban:** {st.session_state.get('department', '')}")
-
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state.get('remaining_days', 0)}")
-
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
-    # Tabs
-    tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
+    # --- Tabs ---
+    if st.session_state["role"] == "admin":
+        tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
+    else:
+        tab1 = st.tab("📅 Xin nghỉ")
+        tab2 = None
 
     # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
-
-        # --- Chọn loại nghỉ chính ---
         leave_type = st.radio(
             "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
             ("Nghỉ phép năm", "Nghỉ không hưởng lương",
@@ -98,14 +97,13 @@ else:
             index=0
         )
 
-        # --- Chọn sub-option tùy loại ---
+        # --- Sub-option ---
+        leave_case = ""
         if leave_type == "Nghỉ phép năm":
             leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
         elif leave_type == "Nghỉ không hưởng lương":
             leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
-                "Do hết phép năm",
-                "Do việc cá nhân thời gian dài"
-            ])
+                                      "Do hết phép năm", "Do việc cá nhân thời gian dài"])
         elif leave_type == "Nghỉ hưởng BHXH":
             leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
                 "Bản thân ốm",
@@ -125,12 +123,7 @@ else:
 
         # --- Số ngày nghỉ ---
         duration = st.number_input(
-            "Số ngày nghỉ",
-            min_value=0.5,
-            max_value=30.0,
-            step=0.5,
-            value=1.0,
-            help="Nhập số ngày nghỉ (0.5, 1, 2, …)"
+            "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0
         )
 
         # --- Ngày bắt đầu / kết thúc ---
@@ -141,7 +134,6 @@ else:
         # --- Lý do ---
         reason = st.text_area("Lý do chi tiết")
 
-        # --- Gửi yêu cầu ---
         if st.button("📨 Gửi yêu cầu"):
             if not reason.strip():
                 st.warning("Vui lòng nhập lý do nghỉ")
@@ -156,19 +148,17 @@ else:
                     leave_case
                 )
 
-    # --- Tab quản lý (admin) ---
-    if st.session_state["role"] == "admin":
+    # --- Tab quản lý admin ---
+    if tab2 is not None:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
             all_leaves = sorted(
-                view_leaves(),
-                key=lambda x: x.get("start_date", "1900-01-01"),
-                reverse=True
+                view_leaves(), key=lambda x: x.get("start_date", "1900-01-01"), reverse=True
             )
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                for idx, leave in enumerate(all_leaves):
+                for leave in all_leaves:
                     with st.container():
                         st.markdown("---")
                         start = leave.get("start_date", "")
@@ -179,24 +169,20 @@ else:
                         approved_by = leave.get("approved_by", "Chưa duyệt")
                         approved_at = leave.get("approved_at", "")
 
-                        # Dòng chính: Username, Ngày nghỉ, Status
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {start} → {end} ({duration} ngày)")
                         col3.write(f"🗂 {leave_type} / {leave_case}")
-                        col4.write(status_badge(leave['status']))
+                        col4.write(status_badge(
+                            leave.get('status', 'pending')))
 
-                        # Lý do nghỉ
-                        st.write(f"📝 Lý do: {leave['reason']}")
+                        st.write(f"📝 Lý do: {leave.get('reason', '')}")
 
-                        # Ai duyệt & khi nào
-                        if leave['status'] != "pending":
+                        if leave.get('status') != "pending":
                             st.write(
                                 f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
 
-                        st.write("")  # Dòng trống
-
-                        if leave["status"] == "pending":
+                        if leave.get("status") == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
                                 st.button(
