@@ -80,7 +80,9 @@ else:
     st.sidebar.write(f"**Phòng ban:** {st.session_state['department']}")
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state['remaining_days']}")
-    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
+
+    if st.sidebar.button("🚪 Đăng xuất"):
+        logout()
 
     # --- Tabs ---
     if st.session_state["role"] == "admin":
