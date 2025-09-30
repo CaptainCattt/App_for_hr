@@ -99,8 +99,9 @@ def do_login(username, password):
         cookies["username"] = user["username"]
         cookies["role"] = user.get("role", "employee")
 
-        st.session_state["rerun_needed"] = True
         cookies.save()
+        st.session_state["rerun_needed"] = True
+
     else:
         st.error("❌ Sai username hoặc password")
 
