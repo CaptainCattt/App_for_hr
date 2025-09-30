@@ -3,6 +3,7 @@ import streamlit as st
 from datetime import date
 from settings import COOKIES
 from functions import *
+from datetime import timedelta
 
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
@@ -60,7 +61,7 @@ if not st.session_state.get("username", ""):
             COOKIES["role"] = st.session_state["role"]
             COOKIES.save()
 
-            st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
+            st.success(f"✅ Chào mừng {st.session_state["role"]} {st.session_state['full_name']} !")
             # reload UI để sidebar nhận dữ liệu
             st.session_state["rerun_needed"] = True
         else:
@@ -88,29 +89,72 @@ else:
     # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
-        leave_date = st.date_input(
-            "Chọn ngày nghỉ", value=date.today(), key="leave_date_input")
-        reason = st.text_area("Lý do nghỉ", key="leave_reason_input")
 
-        st.button(
-            "📨 Gửi yêu cầu",
-            key="send_leave_btn",
-            on_click=lambda: send_leave_request(leave_date, reason)
+        # --- Chọn loại nghỉ chính ---
+        leave_type = st.radio(
+            "Vui lòng chọn loại ngày nghỉ mà bạn muốn",
+            ("Nghỉ phép năm", "Nghỉ không hưởng lương",
+             "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
+            index=0
         )
 
-        st.divider()
-        st.subheader("📜 Lịch sử xin nghỉ")
-        leaves = sorted(
-            view_leaves(st.session_state["username"]),
-            key=lambda x: x["date"],
-            reverse=True
+        # --- Chọn sub-option tùy loại ---
+        if leave_type == "Nghỉ phép năm":
+            leave_case = st.selectbox("Loại phép năm", ["Phép năm"])
+        elif leave_type == "Nghỉ không hưởng lương":
+            leave_case = st.selectbox("Lý do nghỉ không hưởng lương", [
+                "Do hết phép năm",
+                "Do việc cá nhân thời gian dài"
+            ])
+        elif leave_type == "Nghỉ hưởng BHXH":
+            leave_case = st.selectbox("Lý do nghỉ hưởng BHXH", [
+                "Bản thân ốm",
+                "Con ốm",
+                "Bản thân ốm dài ngày",
+                "Chế độ thai sản cho nữ",
+                "Chế độ thai sản cho nam",
+                "Dưỡng sức (sau phẫu thuật, sau sinh, sau ốm, sau sẩy, nạo hút thai,...)",
+                "Suy giảm khả năng lao động (15% - trên 51%)"
+            ])
+        elif leave_type == "Nghỉ việc riêng có hưởng lương":
+            leave_case = st.selectbox("Lý do nghỉ việc riêng có hưởng lương", [
+                "Bản thân kết hôn",
+                "Con kết hôn",
+                "Tang chế tư thân phụ mẫu (Bố/mẹ - vợ/chồng, vợ/chồng, con chết)"
+            ])
+
+        # --- Số ngày nghỉ ---
+        duration = st.number_input(
+            "Số ngày nghỉ",
+            min_value=0.5,
+            max_value=30.0,
+            step=0.5,
+            value=1.0,
+            help="Nhập số ngày nghỉ (0.5, 1, 2, …)"
         )
-        if not leaves:
-            st.info("Bạn chưa có yêu cầu nghỉ nào.")
-        else:
-            for i, leave in enumerate(leaves):
-                with st.expander(f"{leave['date']} - {status_badge(leave['status'])}"):
-                    st.write(f"**Lý do:** {leave['reason']}")
+
+        # --- Ngày bắt đầu / kết thúc ---
+        start_date = st.date_input("Ngày bắt đầu nghỉ", value=date.today())
+        end_date_default = start_date + timedelta(days=int(duration) - 1)
+        end_date = st.date_input("Ngày kết thúc nghỉ", value=end_date_default)
+
+        # --- Lý do ---
+        reason = st.text_area("Lý do chi tiết")
+
+        # --- Gửi yêu cầu ---
+        if st.button("📨 Gửi yêu cầu"):
+            if not reason.strip():
+                st.warning("Vui lòng nhập lý do nghỉ")
+            else:
+                send_leave_request(
+                    st.session_state["username"],
+                    start_date,
+                    end_date,
+                    duration,
+                    reason,
+                    leave_type,
+                    leave_case
+                )
 
     # --- Tab quản lý (admin) ---
     if st.session_state["role"] == "admin":

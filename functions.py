@@ -22,15 +22,19 @@ def register(username, password, role="employee"):
 # --- Leave functions ---
 
 
-def request_leave(username, leave_date, reason):
+def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
     LEAVES_COL.insert_one({
         "username": username,
-        "request_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "leave_date": leave_date.strftime("%Y-%m-%d"),
+        "start_date": str(start_date),
+        "end_date": str(end_date),
+        "duration": duration,
         "reason": reason,
+        "leave_type": leave_type,
+        "leave_case": leave_case,   # <-- Lưu sub-option
         "status": "pending",
+        "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "approved_by": None,
-        "approved_date": None
+        "approved_at": None
     })
 
 
@@ -53,19 +57,30 @@ def status_badge(status: str):
 # --- Callbacks with spinner + notification ---
 
 
-def send_leave_request(leave_date, reason):
+def send_leave_request(username, start_date, end_date, duration, reason, leave_type, leave_case):
     with st.spinner("📨 Đang gửi yêu cầu..."):
-        time.sleep(0.5)  # mô phỏng delay
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        request_leave(st.session_state["username"], str(leave_date), reason)
-        st.success(f"📤 Yêu cầu nghỉ đã được gửi lúc {now_str}!")
+        time.sleep(0.5)
+        request_leave(username, start_date, end_date,
+                      duration, reason, leave_type, leave_case)
+        st.success(
+            f"📤 Yêu cầu '{leave_case}' từ {start_date} đến {end_date} ({duration} ngày) đã gửi!")
 
 
 def approve_leave(l_id, user_name):
     with st.spinner("✅ Đang duyệt..."):
         time.sleep(0.5)
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        leave = LEAVES_COL.find_one({"_id": ObjectId(l_id)})
         update_leave_status(l_id, "approved")
+
+        # Nếu là Nghỉ phép năm, trừ remaining_days
+        if leave["leave_type"] == "Nghỉ phép năm":
+            duration = float(leave.get("duration", 1))
+            USERS_COL.update_one(
+                {"username": user_name},
+                {"$inc": {"remaining_days": -duration}}
+            )
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         st.success(f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
 
 
