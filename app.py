@@ -173,14 +173,19 @@ else:
             else:
                 for leave in all_leaves:
                     with st.container():
-                        col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
+                        st.markdown("---")
+
+                        # Dòng thông tin: Username, Ngày, Status
+                        col1, col2, col3 = st.columns([2, 2, 1])
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {leave['date']}")
-                        col3.write(f"📝 {leave['reason']}")
-                        col4.write(status_badge(leave['status']))
+                        col3.write(status_badge(leave['status']))
 
+                        # Lý do nghỉ (có thể dài)
+                        st.write(f"📝 {leave['reason']}")
+
+                        # Hai nút duyệt/từ chối luôn nằm **cùng dòng cuối**
                         if leave["status"] == "pending":
-                            # Hai nút nằm cùng dòng ở cuối col4
                             btn_col1, btn_col2 = st.columns([1, 1])
                             with btn_col1:
                                 st.button(
