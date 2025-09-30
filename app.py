@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit_authenticator as stauth
 from pymongo import MongoClient
 from bson import ObjectId
 
@@ -16,17 +17,21 @@ leaves_col = db["leaves"]
 # --- Functions ---
 
 
-def login(username, password):
-    return users_col.find_one({"username": username, "password": password})
-
-
-def register(username, password, role="employee"):
+def register_user(username, password, role="employee"):
     if users_col.find_one({"username": username}):
         return False
+    hashed_pw = stauth.Hasher([password]).generate()[0]
     users_col.insert_one(
-        {"username": username, "password": password, "role": role}
-    )
+        {"username": username, "password": hashed_pw, "role": role})
     return True
+
+
+def validate_user(username, password):
+    user = users_col.find_one({"username": username})
+    if not user:
+        return None
+    # kiểm tra password hash
+    return stauth.Hasher([password]).verify(password, user["password"]) and user
 
 
 def request_leave(username, date, reason):
@@ -45,12 +50,8 @@ def view_leaves(username=None):
 
 
 def update_leave_status(leave_id, new_status):
-    leaves_col.update_one(
-        {"_id": ObjectId(leave_id)},
-        {"$set": {"status": new_status}}
-    )
-
-# --- Helpers ---
+    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
+                          "$set": {"status": new_status}})
 
 
 def status_badge(status: str):
@@ -67,16 +68,12 @@ st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
-    # CSS cho form login
-
-    # Form Login
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
     if st.button("🚀 Login"):
-        user = login(username, password)
+        user = validate_user(username, password)
         if user:
             st.session_state["username"] = user["username"]
             st.session_state["role"] = user.get("role", "employee")
@@ -85,8 +82,14 @@ if "username" not in st.session_state:
         else:
             st.error("❌ Sai username hoặc password")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    st.info("👉 Nếu chưa có tài khoản, hãy đăng ký bên dưới:")
+    new_user = st.text_input("Tạo username mới")
+    new_pass = st.text_input("Tạo password mới", type="password")
+    if st.button("📝 Đăng ký"):
+        if register_user(new_user, new_pass):
+            st.success("✅ Tạo tài khoản thành công! Hãy đăng nhập.")
+        else:
+            st.warning("⚠️ Username đã tồn tại.")
 
 else:
     st.sidebar.success(
