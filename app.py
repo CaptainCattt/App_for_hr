@@ -161,7 +161,10 @@ else:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
             all_leaves = sorted(
-                view_leaves(), key=lambda x: x["date"], reverse=True)
+                view_leaves(),
+                key=lambda x: x.get("start_date", "1900-01-01"),
+                reverse=True
+            )
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
