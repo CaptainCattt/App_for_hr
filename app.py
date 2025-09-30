@@ -90,7 +90,7 @@ def logout():
     cookies.save()
     with st.spinner("⏳ Đang đăng xuất, vui lòng đợi..."):
         time.sleep(3)
-    st.experimental_rerun()
+    st.rerun()
 
 
 # --- Login UI ---
@@ -111,7 +111,7 @@ if "username" not in st.session_state:
                 cookies.save()
                 st.success(f"Xin chào {user['username']} 👋")
                 time.sleep(1)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ Sai username hoặc password")
 
@@ -139,7 +139,7 @@ else:
                     st.session_state["username"], str(leave_date), reason)
                 st.success("✅ Đã gửi yêu cầu nghỉ!")
                 time.sleep(1)
-                st.experimental_rerun()
+                st.rerun()
 
         st.button("📨 Gửi yêu cầu", on_click=send_leave_request)
 
@@ -177,7 +177,7 @@ else:
                                     st.success(
                                         f"Đã duyệt nghỉ cho {user_name}")
                                     time.sleep(1)
-                                    st.experimental_rerun()
+                                    st.rerun()
 
                             def reject_leave(l_id=leave["_id"], user_name=leave["username"]):
                                 with st.spinner(f"⏳ Đang từ chối nghỉ của {user_name}..."):
@@ -186,7 +186,7 @@ else:
                                     st.warning(
                                         f"Đã từ chối nghỉ của {user_name}")
                                     time.sleep(1)
-                                    st.experimental_rerun()
+                                    st.rerun()
 
                             c1, c2 = st.columns(2)
                             with c1:
