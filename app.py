@@ -4,6 +4,7 @@ from bson import ObjectId
 from streamlit_cookies_manager import EncryptedCookieManager
 from datetime import date
 import time
+
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
@@ -79,37 +80,46 @@ if "username" not in st.session_state:
         st.session_state["username"] = cookies.get("username")
         st.session_state["role"] = cookies.get("role")
 
+# --- Logout callback ---
+
+
+def logout():
+    st.session_state.clear()
+    cookies["username"] = ""
+    cookies["role"] = ""
+    cookies.save()
+    with st.spinner("⏳ Đang đăng xuất, vui lòng đợi..."):
+        time.sleep(5)  # delay 5 giây trước reload
+    st.experimental_rerun()
+
+
 # --- Login UI ---
 if "username" not in st.session_state:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
-    if st.button("🚀 Login"):
+
+    def do_login():
         user = login(username, password)
         if user:
             st.session_state["username"] = user["username"]
             st.session_state["role"] = user.get("role", "employee")
-            # Lưu cookie để giữ login qua reload
             cookies["username"] = user["username"]
             cookies["role"] = user.get("role", "employee")
             cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
             time.sleep(3)
-            st.rerun()
+            st.experimental_rerun()
         else:
             st.error("❌ Sai username hoặc password")
+
+    st.button("🚀 Login", on_click=do_login)
+
 else:
+    # Sidebar user info
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
-
-    if st.sidebar.button("🚪 Đăng xuất"):
-        st.session_state.clear()
-        cookies["username"] = ""
-        cookies["role"] = ""
-        cookies.save()
-        st.info("✅ Đăng xuất thành công. Reload app sau 5 giây...")
-        time.sleep(5)
-        st.experimental_rerun()
+    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
@@ -119,12 +129,15 @@ else:
         st.subheader("📝 Gửi yêu cầu nghỉ")
         leave_date = st.date_input("Ngày nghỉ", value=date.today())
         reason = st.text_area("Lý do")
-        if st.button("📨 Gửi yêu cầu"):
+
+        def send_leave_request():
             request_leave(
                 st.session_state["username"], str(leave_date), reason)
             st.success("✅ Đã gửi yêu cầu nghỉ!")
             time.sleep(3)
-            st.rerun()
+            st.experimental_rerun()
+
+        st.button("📨 Gửi yêu cầu", on_click=send_leave_request)
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
@@ -153,20 +166,22 @@ else:
                         col4.write(status_badge(leave['status']))
 
                         if leave["status"] == "pending":
+                            def approve_leave(l_id=leave["_id"], user_name=leave["username"]):
+                                update_leave_status(l_id, "approved")
+                                st.success(f"Đã duyệt nghỉ cho {user_name}")
+                                time.sleep(3)
+                                st.experimental_rerun()
+
+                            def reject_leave(l_id=leave["_id"], user_name=leave["username"]):
+                                update_leave_status(l_id, "rejected")
+                                st.warning(f"Đã từ chối nghỉ của {user_name}")
+                                time.sleep(3)
+                                st.experimental_rerun()
+
                             c1, c2 = st.columns(2)
                             with c1:
-                                if st.button("✅ Duyệt", key=f"a{leave['_id']}"):
-                                    update_leave_status(
-                                        leave["_id"], "approved")
-                                    st.success(
-                                        f"Đã duyệt nghỉ cho {leave['username']}")
-                                    time.sleep(3)
-                                    st.rerun()
+                                st.button(
+                                    "✅ Duyệt", key=f"a{leave['_id']}", on_click=approve_leave)
                             with c2:
-                                if st.button("❌ Từ chối", key=f"r{leave['_id']}"):
-                                    update_leave_status(
-                                        leave["_id"], "rejected")
-                                    st.warning(
-                                        f"Đã từ chối nghỉ của {leave['username']}")
-                                    time.sleep(3)
-                                    st.rerun()
+                                st.button(
+                                    "❌ Từ chối", key=f"r{leave['_id']}", on_click=reject_leave)
