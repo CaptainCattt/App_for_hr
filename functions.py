@@ -72,6 +72,7 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
             f"📤 Yêu cầu '{leave_case}' từ {start_date} đến {end_date} ({duration} ngày) đã gửi!")
 
 
+# --- Callbacks với spinner + notification ---
 def approve_leave(l_id, user_name):
     with st.spinner("✅ Đang duyệt..."):
         time.sleep(0.5)
@@ -96,8 +97,8 @@ def approve_leave(l_id, user_name):
                 {"$inc": {"remaining_days": -duration}}
             )
 
-        st.success(
-            f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str} bởi {st.session_state.get('full_name', 'Admin')}!")
+        # Không hiện trực tiếp, dùng flag
+        st.session_state["leave_message"] = f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!"
 
 
 def reject_leave(l_id, user_name):
@@ -105,7 +106,9 @@ def reject_leave(l_id, user_name):
         time.sleep(0.5)
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         update_leave_status(l_id, "rejected")
-        st.error(f"❌ Yêu cầu của {user_name} đã bị từ chối lúc {now_str}!")
+
+        # Không hiện trực tiếp, dùng flag
+        st.session_state["leave_message"] = f"❌ Yêu cầu của {user_name} đã bị từ chối lúc {now_str}!"
 
 
 def do_login(username, password):
@@ -120,7 +123,7 @@ def do_login(username, password):
             COOKIES.save()
             st.success(f"✅ Đăng nhập thành công! Chào {user['username']}")
             time.sleep(0.5)  # cho người dùng thấy thông báo
-            st.session_state["rerun_needed"] = True  # <-- dùng flag
+
         else:
             st.error("❌ Sai username hoặc password")
 
