@@ -23,14 +23,20 @@ def register(username, password, role="employee"):
 
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
+
+    if not isinstance(start_date, str):
+        start_date = start_date.strftime("%Y-%m-%d")
+    if not isinstance(end_date, str):
+        end_date = end_date.strftime("%Y-%m-%d")
+
     LEAVES_COL.insert_one({
         "username": username,
-        "start_date": str(start_date),
-        "end_date": str(end_date),
+        "start_date": start_date,
+        "end_date": end_date,
         "duration": duration,
         "reason": reason,
         "leave_type": leave_type,
-        "leave_case": leave_case,   # <-- Lưu sub-option
+        "leave_case": leave_case,
         "status": "pending",
         "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "approved_by": None,
