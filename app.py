@@ -179,8 +179,7 @@ else:
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {leave['date']}")
-                        col3.write(st.markdown(
-                            "</div>", unsafe_allow_html=True))
+                        col3.empty()
                         col4.write(status_badge(leave['status']))
 
                         # Lý do nghỉ (có thể dài)
