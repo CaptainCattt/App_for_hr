@@ -49,8 +49,27 @@ if not st.session_state.get("username"):
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    if st.button("🚀 Login"):
-        do_login(username, password)
+    def handle_login():
+        user = login(username, password)
+        if user:
+            st.session_state.update({
+                "username": user.get("username", ""),
+                "full_name": user.get("full_name", username),
+                "role": user.get("role", "employee"),
+                "remaining_days": user.get("remaining_days", 12),
+                "department": user.get("department", ""),
+                "position": user.get("position", "")
+            })
+            # Lưu cookies
+            COOKIES["username"] = st.session_state["username"]
+            COOKIES["role"] = st.session_state["role"]
+            COOKIES.save()
+            st.success(
+                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
+        else:
+            st.error("❌ Sai username hoặc password")
+
+    st.button("🚀 Login", on_click=handle_login)
 
 else:
     # --- Sidebar thông tin user ---
@@ -61,9 +80,7 @@ else:
     st.sidebar.write(f"**Phòng ban:** {st.session_state['department']}")
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state['remaining_days']}")
-
-    if st.sidebar.button("🚪 Đăng xuất"):
-        logout()
+    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # --- Tabs ---
     if st.session_state["role"] == "admin":
