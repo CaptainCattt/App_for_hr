@@ -98,15 +98,19 @@ if "username" not in st.session_state:
         else:
             st.error("❌ Sai username hoặc password")
 else:
-    # Sidebar thông tin user
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
+
     if st.sidebar.button("🚪 Đăng xuất"):
         st.session_state.clear()
+
+        # Xóa cookie
         cookies["username"] = ""
         cookies["role"] = ""
         cookies.save()
-        st.rerun()
+
+        # Reload app về màn hình login
+        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
