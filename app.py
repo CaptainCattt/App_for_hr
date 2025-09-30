@@ -171,9 +171,11 @@ else:
                 for idx, leave in enumerate(all_leaves):
                     with st.container():
                         st.markdown("---")
+                        start = leave.get("start_date", "")
+                        end = leave.get("end_date", "")
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
                         col1.write(f"👤 {leave['username']}")
-                        col2.write(f"📅 {leave['date']}")
+                        col2.write(f"📅 Từ {start} đến {end}")
                         col3.empty()
                         col4.write(status_badge(leave['status']))
                         st.write(f"📝 {leave['reason']}")
