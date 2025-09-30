@@ -184,13 +184,12 @@ else:
                             st.write(
                                 f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
 
-                        for leave in all_leaves:
+                        if leave.get("status") == "pending":
+                            btn_col1, btn_col2 = st.columns([4, 1])
                             approve_callback = partial(
                                 approve_leave, leave["_id"], leave["username"])
                             reject_callback = partial(
                                 reject_leave, leave["_id"], leave["username"])
-
-                            btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
                                 st.button(
                                     "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=approve_callback)
