@@ -2,6 +2,7 @@ import streamlit as st
 from pymongo import MongoClient
 from bson import ObjectId
 from streamlit_cookies_manager import EncryptedCookieManager
+from datetime import date
 
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
@@ -16,8 +17,7 @@ leaves_col = db["leaves"]
 
 # --- Cookie Config ---
 cookies = EncryptedCookieManager(
-    prefix="leave_mgmt",  # tên cookie prefix
-    # random string, bạn set trong .streamlit/secrets.toml
+    prefix="leave_mgmt",
     password=st.secrets["COOKIE_PASSWORD"],
 )
 if not cookies.ready():
@@ -34,15 +34,14 @@ def register(username, password, role="employee"):
     if users_col.find_one({"username": username}):
         return False
     users_col.insert_one(
-        {"username": username, "password": password, "role": role}
-    )
+        {"username": username, "password": password, "role": role})
     return True
 
 
-def request_leave(username, date, reason):
+def request_leave(username, date_str, reason):
     leaves_col.insert_one({
         "username": username,
-        "date": date,
+        "date": date_str,
         "reason": reason,
         "status": "pending"
     })
@@ -74,31 +73,32 @@ def status_badge(status: str):
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
-# --- Check login cookie ---
-if "username" not in st.session_state and cookies.get("username"):
-    st.session_state["username"] = cookies.get("username")
-    st.session_state["role"] = cookies.get("role")
+# --- Restore session from cookies ---
+if "username" not in st.session_state:
+    if cookies.get("username"):
+        st.session_state["username"] = cookies.get("username")
+        st.session_state["role"] = cookies.get("role")
 
+# --- Login UI ---
 if "username" not in st.session_state:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
-
     if st.button("🚀 Login"):
         user = login(username, password)
         if user:
             st.session_state["username"] = user["username"]
             st.session_state["role"] = user.get("role", "employee")
-            # lưu cookie
+            # Lưu cookie để giữ login qua reload
             cookies["username"] = user["username"]
             cookies["role"] = user.get("role", "employee")
             cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
-            st.rerun()
+            st.experimental_rerun()
         else:
             st.error("❌ Sai username hoặc password")
-
 else:
+    # Sidebar thông tin user
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
     if st.sidebar.button("🚪 Đăng xuất"):
@@ -106,17 +106,21 @@ else:
         cookies["username"] = ""
         cookies["role"] = ""
         cookies.save()
-        st.rerun()
+        st.experimental_rerun()
 
+    # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
 
+    # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
-        date = st.date_input("Ngày nghỉ")
+        leave_date = st.date_input("Ngày nghỉ", value=date.today())
         reason = st.text_area("Lý do")
         if st.button("📨 Gửi yêu cầu"):
-            request_leave(st.session_state["username"], str(date), reason)
+            request_leave(
+                st.session_state["username"], str(leave_date), reason)
             st.success("✅ Đã gửi yêu cầu nghỉ!")
+            st.experimental_rerun()
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
@@ -128,6 +132,7 @@ else:
                 with st.expander(f"{leave['date']} - {status_badge(leave['status'])}"):
                     st.write(f"**Lý do:** {leave['reason']}")
 
+    # --- Tab quản lý (admin) ---
     if st.session_state["role"] == "admin":
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
@@ -146,16 +151,16 @@ else:
                         if leave["status"] == "pending":
                             c1, c2 = st.columns(2)
                             with c1:
-                                if st.button(f"✅ Duyệt", key=f"a{leave['_id']}"):
+                                if st.button("✅ Duyệt", key=f"a{leave['_id']}"):
                                     update_leave_status(
                                         leave["_id"], "approved")
                                     st.success(
                                         f"Đã duyệt nghỉ cho {leave['username']}")
-                                    st.rerun()
+                                    st.experimental_rerun()
                             with c2:
-                                if st.button(f"❌ Từ chối", key=f"r{leave['_id']}"):
+                                if st.button("❌ Từ chối", key=f"r{leave['_id']}"):
                                     update_leave_status(
                                         leave["_id"], "rejected")
                                     st.warning(
                                         f"Đã từ chối nghỉ của {leave['username']}")
-                                    st.rerun()
+                                    st.experimental_rerun()
