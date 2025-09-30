@@ -81,8 +81,7 @@ else:
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {st.session_state['remaining_days']}")
 
-    if st.sidebar.button("🚪 Đăng xuất"):
-        logout()
+    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # --- Tabs ---
     if st.session_state["role"] == "admin":
