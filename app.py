@@ -90,7 +90,7 @@ def logout():
     cookies.save()
     with st.spinner("⏳ Đang đăng xuất, vui lòng đợi..."):
         time.sleep(5)  # delay 5 giây trước reload
-    st.experimental_rerun()
+    st.rerun()
 
 
 # --- Login UI ---
