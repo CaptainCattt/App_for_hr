@@ -172,15 +172,17 @@ else:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
                 for leave in all_leaves:
-                    # 1 hàng info chính
-                    col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
-                    col1.write(f"👤 {leave['username']}")
-                    col2.write(f"📅 {leave['date']}")
-                    col4.write(status_badge(leave['status']))
+                    # Tạo 1 khung card cho mỗi yêu cầu
+                    with st.container():
+                        st.markdown("---")  # phân cách giữa các card
+                        st.write(
+                            f"👤 **{leave['username']}**  |  📅 **{leave['date']}**  |  {status_badge(leave['status'])}")
 
-                    # Nút Duyệt / Từ chối nằm trong col4, nếu trạng thái là pending
-                    if leave["status"] == "pending":
-                        with col4:
+                        # Lý do nghỉ
+                        st.write(f"📝 **Lý do:** {leave['reason']}")
+
+                        # Hai nút Duyệt / Từ chối nếu trạng thái pending
+                        if leave["status"] == "pending":
                             btn_col1, btn_col2 = st.columns([1, 1])
                             with btn_col1:
                                 st.button(
@@ -194,7 +196,3 @@ else:
                                     on_click=reject_leave,
                                     args=(leave["_id"], leave["username"])
                                 )
-
-                    # Lý do nghỉ dài hiển thị riêng bên dưới
-                    with st.expander("📝 Lý do nghỉ"):
-                        col3.write(leave["reason"])
