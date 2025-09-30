@@ -63,22 +63,19 @@ if not st.session_state.get("username", ""):
             COOKIES["role"] = st.session_state["role"]
             COOKIES.save()
 
-            # Hiện thông báo
-            st.session_state["login_message"] = f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!"
+            st.success(
+                f"✅ Chào mừng {st.session_state['role']} {st.session_state['full_name']}!")
+
+            # Dùng flag để rerun ở luồng chính
             st.session_state["login_success"] = True
         else:
             st.error("❌ Sai username hoặc password")
 
     st.button("🚀 Login", on_click=handle_login)
 
-    # --- Trigger rerun nếu login thành công ---
-    if st.session_state.get("login_success"):
-        # Hiện thông báo trước khi rerun
-        st.success(st.session_state.get("login_message", ""))
-        # Reset flag trước khi reload
-        st.session_state["login_success"] = False
-        st.session_state["login_message"] = ""
-        # Rerun app
+    # Luồng chính kiểm tra flag
+    if st.session_state.get("rerun_needed"):
+        st.session_state["rerun_needed"] = False
         st.experimental_rerun()
 
 else:
