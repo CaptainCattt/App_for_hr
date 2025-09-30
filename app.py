@@ -172,26 +172,29 @@ else:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
                 for leave in all_leaves:
-                    with st.container():
-                        col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
-                        col1.write(f"👤 {leave['username']}")
-                        col2.write(f"📅 {leave['date']}")
-                        col3.write(f"📝 {leave['reason']}")
-                        col4.write(status_badge(leave['status']))
+                    # 1 hàng info chính
+                    col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
+                    col1.write(f"👤 {leave['username']}")
+                    col2.write(f"📅 {leave['date']}")
+                    col4.write(status_badge(leave['status']))
 
-                        if leave["status"] == "pending":
-                            # tạo 2 nút bên trong col4
-                            with col4:
-                                btn_col1, btn_col2 = st.columns([1, 1])
-                                with btn_col1:
-                                    st.button(
-                                        "✅ Duyệt", key=f"a{leave['_id']}",
-                                        on_click=approve_leave,
-                                        args=(leave["_id"], leave["username"])
-                                    )
-                                with btn_col2:
-                                    st.button(
-                                        "❌ Từ chối", key=f"r{leave['_id']}",
-                                        on_click=reject_leave,
-                                        args=(leave["_id"], leave["username"])
-                                    )
+                    # Nút Duyệt / Từ chối nằm trong col4, nếu trạng thái là pending
+                    if leave["status"] == "pending":
+                        with col4:
+                            btn_col1, btn_col2 = st.columns([1, 1])
+                            with btn_col1:
+                                st.button(
+                                    "✅ Duyệt", key=f"a{leave['_id']}",
+                                    on_click=approve_leave,
+                                    args=(leave["_id"], leave["username"])
+                                )
+                            with btn_col2:
+                                st.button(
+                                    "❌ Từ chối", key=f"r{leave['_id']}",
+                                    on_click=reject_leave,
+                                    args=(leave["_id"], leave["username"])
+                                )
+
+                    # Lý do nghỉ dài hiển thị riêng bên dưới
+                    with st.expander("📝 Lý do nghỉ"):
+                        col3.write(leave["reason"])
