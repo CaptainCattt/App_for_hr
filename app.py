@@ -12,13 +12,18 @@ if "username" not in st.session_state and COOKIES.get("username"):
     st.session_state["username"] = COOKIES.get("username")
     st.session_state["role"] = COOKIES.get("role")
 
-# --- Flags rerun ---
+# --- Đầu file ---
 if "rerun_needed" not in st.session_state:
     st.session_state["rerun_needed"] = False
 
+# --- Sau restore session ---
 if st.session_state.get("rerun_needed"):
     st.session_state["rerun_needed"] = False
-    st.experimental_rerun()
+
+    try:
+        st.experimental_rerun()
+    except AttributeError:
+        pass
 
 # --- Login UI ---
 if "username" not in st.session_state:
