@@ -36,7 +36,8 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
-if not st.session_state["username"]:
+# --- Login UI ---
+if not st.session_state.get("username", ""):
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username", key="login_username")
     password = st.text_input(
@@ -45,6 +46,7 @@ if not st.session_state["username"]:
     def handle_login():
         user = login(username, password)
         if user:
+            # Lưu thông tin vào session
             st.session_state["username"] = user.get("username", "")
             st.session_state["full_name"] = user.get(
                 "full_name", st.session_state["username"])
@@ -52,6 +54,8 @@ if not st.session_state["username"]:
             st.session_state["remaining_days"] = user.get("remaining_days", 12)
             st.session_state["department"] = user.get("department", "")
             st.session_state["position"] = user.get("position", "")
+            st.session_state["dob"] = user.get("dob", "")
+            st.session_state["phone"] = user.get("phone", "")
 
             # Lưu cookies
             COOKIES["username"] = st.session_state["username"]
@@ -59,37 +63,26 @@ if not st.session_state["username"]:
             COOKIES.save()
 
             st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
-            st.experimental_rerun()  # reload app để sidebar nhận thông tin
+            st.experimental_rerun()  # reload UI để sidebar nhận dữ liệu
         else:
             st.error("❌ Sai username hoặc password")
 
     st.button("🚀 Login", on_click=handle_login)
 
-
 else:
-    # Sidebar hiển thị thông tin user
-    # Sidebar hiển thị thông tin user dạng "field"
-    st.sidebar.markdown("### 👤 Thông tin nhân viên")
+    # --- Sidebar hiển thị thông tin user ---
+    st.sidebar.markdown("## 👤 Thông tin nhân viên")
+    st.sidebar.write(f"**Họ tên:** {st.session_state.get('full_name', '')}")
+    st.sidebar.write(f"**Username:** {st.session_state.get('username', '')}")
+    st.sidebar.write(f"**Chức vụ:** {st.session_state.get('position', '')}")
+    st.sidebar.write(
+        f"**Phòng ban:** {st.session_state.get('department', '')}")
+    st.sidebar.write(f"**Ngày sinh:** {st.session_state.get('dob', '')}")
+    st.sidebar.write(f"**SĐT:** {st.session_state.get('phone', '')}")
+    st.sidebar.write(
+        f"**Ngày nghỉ còn lại:** {st.session_state.get('remaining_days', 0)}")
 
-    st.sidebar.text_input("Họ và tên", st.session_state.get(
-        "full_name", ""), disabled=True)
-    st.sidebar.text_input("Username", st.session_state.get(
-        "username", ""), disabled=True)
-    st.sidebar.text_input(
-        "Vai trò", st.session_state.get("role", ""), disabled=True)
-    st.sidebar.text_input("Phòng ban", st.session_state.get(
-        "department", ""), disabled=True)
-    st.sidebar.text_input("Chức vụ", st.session_state.get(
-        "position", ""), disabled=True)
-    st.sidebar.text_input(
-        "Ngày sinh", st.session_state.get("dob", ""), disabled=True)
-    st.sidebar.text_input(
-        "SĐT", st.session_state.get("phone", ""), disabled=True)
-    st.sidebar.text_input("Ngày nghỉ còn lại", st.session_state.get(
-        "remaining_days", 0), disabled=True)
-
-    if st.sidebar.button("🚪 Đăng xuất"):
-        logout()
+    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
