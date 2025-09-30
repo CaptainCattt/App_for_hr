@@ -89,7 +89,6 @@ if st.session_state.get("rerun_needed"):
     with st.spinner("⏳ Đang xử lý, vui lòng đợi..."):
         time.sleep(1)  # spinner hiển thị 1 giây
     st.session_state["rerun_needed"] = False
-    st.experimental_rerun()
 
 
 # --- Logout callback ---
