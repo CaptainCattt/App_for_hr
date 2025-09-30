@@ -5,22 +5,6 @@ import streamlit as st
 import time
 from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS
 
-# --- User functions ---
-
-
-def login(username, password):
-    return USERS_COL.find_one({"username": username, "password": password})
-
-
-def register(username, password, role="employee"):
-    if USERS_COL.find_one({"username": username}):
-        return False
-    USERS_COL.insert_one(
-        {"username": username, "password": password, "role": role})
-    return True
-
-# --- Leave functions ---
-
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
 
