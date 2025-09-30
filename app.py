@@ -173,14 +173,28 @@ else:
                         st.markdown("---")
                         start = leave.get("start_date", "")
                         end = leave.get("end_date", "")
+                        duration = leave.get("duration", "")
+                        leave_type = leave.get("leave_type", "")
+                        leave_case = leave.get("leave_case", "")
+                        approved_by = leave.get("approved_by", "Chưa duyệt")
+                        approved_at = leave.get("approved_at", "")
+
+                        # Dòng chính: Username, Ngày nghỉ, Status
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
                         col1.write(f"👤 {leave['username']}")
-                        col2.write(f"📅 Từ {start} đến {end}")
-                        col3.empty()
+                        col2.write(f"📅 {start} → {end} ({duration} ngày)")
+                        col3.write(f"🗂 {leave_type} / {leave_case}")
                         col4.write(status_badge(leave['status']))
-                        st.write(f"📝 {leave['reason']}")
-                        st.write("")
-                        st.write("")
+
+                        # Lý do nghỉ
+                        st.write(f"📝 Lý do: {leave['reason']}")
+
+                        # Ai duyệt & khi nào
+                        if leave['status'] != "pending":
+                            st.write(
+                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
+
+                        st.write("")  # Dòng trống
 
                         if leave["status"] == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
