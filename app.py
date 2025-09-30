@@ -64,20 +64,31 @@ if not st.session_state["username"]:
             COOKIES.save()
 
             st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
-            st.experimental_rerun()  # reload giao diện
+            st.session_state["rerun_needed"] = True
         else:
             st.error("❌ Sai username hoặc password")
 
 else:
     # Sidebar hiển thị thông tin user
-    st.sidebar.success(
-        f"👤 {st.session_state.get('full_name', st.session_state['username'])} ({st.session_state.get('role', '')})\n"
-        f"Phòng ban: {st.session_state.get('department', '')}\n"
-        f"Chức vụ: {st.session_state.get('position', '')}\n"
-        f"Ngày sinh: {st.session_state.get('dob', '')}\n"
-        f"SĐT: {st.session_state.get('phone', '')}\n"
-        f"Ngày nghỉ còn lại: {st.session_state.get('remaining_days', 0)}"
-    )
+    # Sidebar hiển thị thông tin user dạng "field"
+    st.sidebar.markdown("### 👤 Thông tin nhân viên")
+
+    st.sidebar.text_input("Họ và tên", st.session_state.get(
+        "full_name", ""), disabled=True)
+    st.sidebar.text_input("Username", st.session_state.get(
+        "username", ""), disabled=True)
+    st.sidebar.text_input(
+        "Vai trò", st.session_state.get("role", ""), disabled=True)
+    st.sidebar.text_input("Phòng ban", st.session_state.get(
+        "department", ""), disabled=True)
+    st.sidebar.text_input("Chức vụ", st.session_state.get(
+        "position", ""), disabled=True)
+    st.sidebar.text_input(
+        "Ngày sinh", st.session_state.get("dob", ""), disabled=True)
+    st.sidebar.text_input(
+        "SĐT", st.session_state.get("phone", ""), disabled=True)
+    st.sidebar.text_input("Ngày nghỉ còn lại", st.session_state.get(
+        "remaining_days", 0), disabled=True)
 
     if st.sidebar.button("🚪 Đăng xuất"):
         logout()
