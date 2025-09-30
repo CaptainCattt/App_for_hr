@@ -8,4 +8,5 @@ pandas
 bcrypt
 python-dotenv
 pymongo
-streamlit_authenticator 
+streamlit_authenticator
+streamlit-cookies-manager

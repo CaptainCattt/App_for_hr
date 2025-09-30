@@ -1,6 +1,7 @@
 import streamlit as st
 from pymongo import MongoClient
 from bson import ObjectId
+from streamlit_cookies_manager import EncryptedCookieManager
 
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
@@ -12,6 +13,15 @@ db = client[DB_NAME]
 # Collections
 users_col = db["users"]
 leaves_col = db["leaves"]
+
+# --- Cookie Config ---
+cookies = EncryptedCookieManager(
+    prefix="leave_mgmt",  # tên cookie prefix
+    # random string, bạn set trong .streamlit/secrets.toml
+    password=st.secrets["COOKIE_PASSWORD"],
+)
+if not cookies.ready():
+    st.stop()
 
 # --- Functions ---
 
@@ -50,8 +60,6 @@ def update_leave_status(leave_id, new_status):
         {"$set": {"status": new_status}}
     )
 
-# --- Helpers ---
-
 
 def status_badge(status: str):
     colors = {
@@ -66,11 +74,12 @@ def status_badge(status: str):
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
-if "username" not in st.session_state:
-    # CSS cho form login
+# --- Check login cookie ---
+if "username" not in st.session_state and cookies.get("username"):
+    st.session_state["username"] = cookies.get("username")
+    st.session_state["role"] = cookies.get("role")
 
-    # Form Login
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+if "username" not in st.session_state:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
@@ -80,19 +89,23 @@ if "username" not in st.session_state:
         if user:
             st.session_state["username"] = user["username"]
             st.session_state["role"] = user.get("role", "employee")
+            # lưu cookie
+            cookies["username"] = user["username"]
+            cookies["role"] = user.get("role", "employee")
+            cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
             st.rerun()
         else:
             st.error("❌ Sai username hoặc password")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 else:
     st.sidebar.success(
         f"👤 {st.session_state['username']} ({st.session_state['role']})")
     if st.sidebar.button("🚪 Đăng xuất"):
         st.session_state.clear()
+        cookies["username"] = ""
+        cookies["role"] = ""
+        cookies.save()
         st.rerun()
 
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
