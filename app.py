@@ -1,26 +1,34 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 from pymongo import MongoClient
 from bson import ObjectId
+import bcrypt
 
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
 
-client = MongoClient(MONGO_URL)
+client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)  # tránh treo
 db = client[DB_NAME]
 
 # Collections
 users_col = db["users"]
 leaves_col = db["leaves"]
 
-# --- Functions ---
+# --- Auth Helpers ---
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def check_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
 def register_user(username, password, role="employee"):
     if users_col.find_one({"username": username}):
         return False
-    hashed_pw = stauth.Hasher([password]).generate()[0]
+    hashed_pw = hash_password(password)
     users_col.insert_one(
         {"username": username, "password": hashed_pw, "role": role})
     return True
@@ -30,8 +38,11 @@ def validate_user(username, password):
     user = users_col.find_one({"username": username})
     if not user:
         return None
-    # kiểm tra password hash
-    return stauth.Hasher([password]).verify(password, user["password"]) and user
+    if check_password(password, user["password"]):
+        return user
+    return None
+
+# --- Leave functions ---
 
 
 def request_leave(username, date, reason):
