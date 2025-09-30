@@ -100,4 +100,4 @@ def logout():
         COOKIES.save()
         st.success("✅ Bạn đã đăng xuất thành công!")
         time.sleep(0.5)
-        st.rerun()  # <-- dùng flag
+        st.session_state["rerun_needed"] = True

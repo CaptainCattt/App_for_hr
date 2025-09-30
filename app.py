@@ -46,8 +46,16 @@ else:
         st.subheader("📝 Gửi yêu cầu nghỉ")
         leave_date = st.date_input("Ngày nghỉ", value=date.today())
         reason = st.text_area("Lý do")
-        st.button("📨 Gửi yêu cầu", on_click=send_leave_request,
-                  args=(st.session_state["username"], leave_date, reason))
+        st.session_state["leave_date"] = st.date_input(
+            "Ngày nghỉ", value=date.today())
+        st.session_state["reason"] = st.text_area("Lý do")
+
+        st.button(
+            "📨 Gửi yêu cầu",
+            on_click=lambda: send_leave_request(
+                st.session_state["leave_date"], st.session_state["reason"]
+            )
+        )
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
@@ -84,10 +92,14 @@ else:
                         if leave["status"] == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
-                                st.button("✅ Duyệt", key=f"a{leave['_id']}",
-                                          on_click=approve_leave,
-                                          args=(leave["_id"], leave["username"]))
+                                st.button(
+                                    "✅ Duyệt",
+                                    key=f"a{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(
+                                        l_id, u)
+                                )
                             with btn_col2:
-                                st.button("❌ Từ chối", key=f"r{leave['_id']}",
-                                          on_click=reject_leave,
-                                          args=(leave["_id"], leave["username"]))
+                                st.button("❌ Từ chối", key=f"a{leave['_id']}",
+                                          on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
+                                              l_id, u)
+                                          )
