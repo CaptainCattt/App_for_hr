@@ -94,7 +94,7 @@ if "username" not in st.session_state:
             cookies["role"] = user.get("role", "employee")
             cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("❌ Sai username hoặc password")
 else:
@@ -106,7 +106,7 @@ else:
         cookies["username"] = ""
         cookies["role"] = ""
         cookies.save()
-        st.experimental_rerun()
+        st.rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
@@ -120,7 +120,7 @@ else:
             request_leave(
                 st.session_state["username"], str(leave_date), reason)
             st.success("✅ Đã gửi yêu cầu nghỉ!")
-            st.experimental_rerun()
+            st.rerun()
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
@@ -156,11 +156,11 @@ else:
                                         leave["_id"], "approved")
                                     st.success(
                                         f"Đã duyệt nghỉ cho {leave['username']}")
-                                    st.experimental_rerun()
+                                    st.rerun()
                             with c2:
                                 if st.button("❌ Từ chối", key=f"r{leave['_id']}"):
                                     update_leave_status(
                                         leave["_id"], "rejected")
                                     st.warning(
                                         f"Đã từ chối nghỉ của {leave['username']}")
-                                    st.experimental_rerun()
+                                    st.rerun()
