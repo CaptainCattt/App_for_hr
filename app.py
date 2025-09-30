@@ -109,7 +109,7 @@ if "username" not in st.session_state:
             cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
             time.sleep(3)
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("❌ Sai username hoặc password")
 
@@ -135,7 +135,7 @@ else:
                 st.session_state["username"], str(leave_date), reason)
             st.success("✅ Đã gửi yêu cầu nghỉ!")
             time.sleep(3)
-            st.experimental_rerun()
+            st.rerun()
 
         st.button("📨 Gửi yêu cầu", on_click=send_leave_request)
 
@@ -170,13 +170,13 @@ else:
                                 update_leave_status(l_id, "approved")
                                 st.success(f"Đã duyệt nghỉ cho {user_name}")
                                 time.sleep(3)
-                                st.experimental_rerun()
+                                st.rerun()
 
                             def reject_leave(l_id=leave["_id"], user_name=leave["username"]):
                                 update_leave_status(l_id, "rejected")
                                 st.warning(f"Đã từ chối nghỉ của {user_name}")
                                 time.sleep(3)
-                                st.experimental_rerun()
+                                st.rerun()
 
                             c1, c2 = st.columns(2)
                             with c1:
