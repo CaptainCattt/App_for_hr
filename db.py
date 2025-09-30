@@ -1,20 +1,15 @@
-import psycopg2
+# db.py
 import os
 from dotenv import load_dotenv
+import psycopg2
 
 load_dotenv()
-
-DB_URL = os.getenv(
-    "postgresql://postgres.pydslnyczzkuepitdgbq:[luuquangtienHoang2007@]@aws-1-us-east-2.pooler.supabase.com:5432/postgres")
+DB_URL = os.getenv("DATABASE_URL")
 
 
 def get_connection():
-    return psycopg2.connect(DB_URL)
-
-
-def init_db():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            with open("schema.sql", "r") as f:
-                cur.execute(f.read())
-        conn.commit()
+    if not DB_URL:
+        raise RuntimeError(
+            "DATABASE_URL not set. Check .env or environment secrets.")
+    # Optional: tăng timeout hoặc set sslmode nếu Supabase yêu cầu
+    return psycopg2.connect(DB_URL, connect_timeout=10)

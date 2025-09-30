@@ -1,108 +1,116 @@
 import streamlit as st
 import psycopg2
-import pandas as pd
-import bcrypt
 from db import get_connection
 
-st.set_page_config(page_title="Leave Management App", layout="wide")
-
-# ---- Login ----
+# ------------------ DB Functions -------------------
 
 
 def login(username, password):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, password, role FROM users WHERE username=%s", (username,))
-            user = cur.fetchone()
-            if user and bcrypt.checkpw(password.encode(), user[1].encode()):
-                return {"id": user[0], "role": user[2]}
-    return None
-
-# ---- Create leave request ----
+                "SELECT id, username, role FROM users WHERE username=%s AND password=%s", (username, password))
+            return cur.fetchone()
 
 
 def create_leave_request(user_id, start_date, end_date, reason):
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO leave_requests (user_id, start_date, end_date, reason)
-                VALUES (%s, %s, %s, %s)
-            """, (user_id, start_date, end_date, reason))
+            cur.execute(
+                "INSERT INTO leave_requests (user_id, start_date, end_date, reason) VALUES (%s, %s, %s, %s)",
+                (user_id, start_date, end_date, reason)
+            )
         conn.commit()
 
-# ---- Admin update status ----
+
+def get_leave_requests():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT lr.id, u.username, lr.start_date, lr.end_date, lr.reason, lr.status
+                FROM leave_requests lr
+                JOIN users u ON lr.user_id = u.id
+                ORDER BY lr.id DESC
+            """)
+            return cur.fetchall()
 
 
-def update_request_status(req_id, status):
+def update_leave_request(request_id, status):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE leave_requests SET status=%s WHERE id=%s", (status, req_id))
+                "UPDATE leave_requests SET status=%s WHERE id=%s", (status, request_id))
         conn.commit()
 
-# ---- Dashboard ----
 
-
-def get_dashboard():
+def get_summary():
     with get_connection() as conn:
-        df = pd.read_sql("""
-            SELECT u.username, 
-                   COUNT(lr.id) FILTER (WHERE lr.status='approved') AS approved_leaves
-            FROM users u
-            LEFT JOIN leave_requests lr ON u.id = lr.user_id
-            GROUP BY u.username
-        """, conn)
-    return df
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT u.username, DATE_TRUNC('month', lr.start_date) AS month, COUNT(*) AS total_days
+                FROM leave_requests lr
+                JOIN users u ON lr.user_id = u.id
+                WHERE lr.status = 'approved'
+                GROUP BY u.username, DATE_TRUNC('month', lr.start_date)
+                ORDER BY month DESC
+            """)
+            return cur.fetchall()
 
 
-# ---- UI ----
+# ------------------ Streamlit UI -------------------
 st.title("🚀 Leave Management System")
 
+# Login
 if "user" not in st.session_state:
-    st.session_state.user = None
-
-if not st.session_state.user:
     st.subheader("Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     if st.button("Login"):
         user = login(username, password)
         if user:
-            st.session_state.user = user
-            st.success(f"Logged in as {username} ({user['role']})")
+            st.session_state.user = {
+                "id": user[0], "username": user[1], "role": user[2]}
+            st.success(f"Welcome {user[1]} ({user[2]})")
         else:
             st.error("Invalid credentials")
+
 else:
     user = st.session_state.user
-    st.sidebar.write(f"Logged in as {user['role']}")
+    st.sidebar.write(f"👤 {user['username']} ({user['role']})")
     if st.sidebar.button("Logout"):
-        st.session_state.user = None
+        del st.session_state.user
         st.experimental_rerun()
 
-    # Employee view
+    # Employee View
     if user["role"] == "employee":
-        st.subheader("Tạo yêu cầu nghỉ")
-        start_date = st.date_input("Ngày bắt đầu")
-        end_date = st.date_input("Ngày kết thúc")
-        reason = st.text_area("Lý do")
-        if st.button("Gửi yêu cầu"):
+        st.header("📅 Submit Leave Request")
+        start_date = st.date_input("Start Date")
+        end_date = st.date_input("End Date")
+        reason = st.text_area("Reason")
+        if st.button("Submit Request"):
             create_leave_request(user["id"], start_date, end_date, reason)
-            st.success("Đã gửi yêu cầu nghỉ")
+            st.success("Request submitted!")
 
-    # Admin view
-    elif user["role"] == "admin":
-        st.subheader("Duyệt yêu cầu nghỉ")
-        with get_connection() as conn:
-            df = pd.read_sql(
-                "SELECT lr.id, u.username, lr.start_date, lr.end_date, lr.reason, lr.status FROM leave_requests lr JOIN users u ON lr.user_id=u.id", conn)
-        st.dataframe(df)
-        req_id = st.number_input("ID yêu cầu cần duyệt", min_value=1, step=1)
-        action = st.selectbox("Trạng thái", ["approved", "rejected"])
-        if st.button("Cập nhật"):
-            update_request_status(req_id, action)
-            st.success("Đã cập nhật yêu cầu")
+    # HR/Admin View
+    elif user["role"] == "hr":
+        st.header("📋 Manage Leave Requests")
+        requests = get_leave_requests()
+        for r in requests:
+            st.write(
+                f"ID {r[0]} | {r[1]} | {r[2]} → {r[3]} | Reason: {r[4]} | Status: {r[5]}")
+            if r[5] == "pending":
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Approve", key=f"approve_{r[0]}"):
+                        update_leave_request(r[0], "approved")
+                        st.experimental_rerun()
+                with col2:
+                    if st.button("Reject", key=f"reject_{r[0]}"):
+                        update_leave_request(r[0], "rejected")
+                        st.experimental_rerun()
 
-        st.subheader("📊 Dashboard nghỉ phép")
-        dash = get_dashboard()
-        st.bar_chart(dash.set_index("username")["approved_leaves"])
+        st.header("📊 Dashboard")
+        summary = get_summary()
+        st.write("### Leave Summary")
+        for s in summary:
+            st.write(f"{s[0]} | {s[1].strftime('%Y-%m')} | {s[2]} days")
