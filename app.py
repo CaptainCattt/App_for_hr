@@ -152,9 +152,6 @@ else:
                     leave_case
                 )
                 placeholder.success("📤 Yêu cầu nghỉ đã được gửi!")
-                st.session_state["last_leave_request"] = now_ts
-                time.sleep(3)
-                placeholder.empty()
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
