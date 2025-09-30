@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from bson import ObjectId
 from streamlit_cookies_manager import EncryptedCookieManager
 from datetime import date
-
+import time
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
@@ -94,6 +94,7 @@ if "username" not in st.session_state:
             cookies["role"] = user.get("role", "employee")
             cookies.save()
             st.success(f"Xin chào {user['username']} 👋")
+            time.sleep(5)
             st.rerun()
         else:
             st.error("❌ Sai username hoặc password")
@@ -124,6 +125,7 @@ else:
             request_leave(
                 st.session_state["username"], str(leave_date), reason)
             st.success("✅ Đã gửi yêu cầu nghỉ!")
+            time.sleep(5)
             st.rerun()
 
         st.divider()
@@ -160,6 +162,7 @@ else:
                                         leave["_id"], "approved")
                                     st.success(
                                         f"Đã duyệt nghỉ cho {leave['username']}")
+                                    time.sleep(5)
                                     st.rerun()
                             with c2:
                                 if st.button("❌ Từ chối", key=f"r{leave['_id']}"):
@@ -167,4 +170,5 @@ else:
                                         leave["_id"], "rejected")
                                     st.warning(
                                         f"Đã từ chối nghỉ của {leave['username']}")
+                                    time.sleep(5)
                                     st.rerun()
