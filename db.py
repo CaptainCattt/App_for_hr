@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DB_URL = os.getenv(
-    "postgresql://postgres:[luuquangtienHoang2007@]@db.pydslnyczzkuepitdgbq.supabase.co:5432/postgres")
+    "postgresql://postgres.pydslnyczzkuepitdgbq:[luuquangtienHoang2007@]@aws-1-us-east-2.pooler.supabase.com:5432/postgres")
 
 
 def get_connection():
