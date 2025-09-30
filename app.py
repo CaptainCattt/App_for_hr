@@ -1,3 +1,4 @@
+from datetime import datetime
 import streamlit as st
 from pymongo import MongoClient
 from bson import ObjectId
@@ -78,62 +79,59 @@ if "username" not in st.session_state:
         st.session_state["username"] = cookies.get("username")
         st.session_state["role"] = cookies.get("role")
 
-# --- Flags for rerun ---
-if "rerun_needed" not in st.session_state:
-    st.session_state["rerun_needed"] = False
-
-if "leave_submitted" not in st.session_state:
-    st.session_state["leave_submitted"] = False
-
-# --- Rerun if flag set ---
-if st.session_state.get("rerun_needed"):
-    st.session_state["rerun_needed"] = False
-
 
 # --- Logout callback ---
 def do_login(username, password):
-    user = login(username, password)
-    if user:
-        st.session_state["username"] = user["username"]
-        st.session_state["role"] = user.get("role", "employee")
-        cookies["username"] = user["username"]
-        cookies["role"] = user.get("role", "employee")
-
-        cookies.save()
-        st.session_state["rerun_needed"] = True
-
-    else:
-        st.error("❌ Sai username hoặc password")
+    with st.spinner("🔑 Đang đăng nhập..."):
+        time.sleep(0.5)  # giả lập delay
+        user = login(username, password)
+        if user:
+            st.session_state["username"] = user["username"]
+            st.session_state["role"] = user.get("role", "employee")
+            cookies["username"] = user["username"]
+            cookies["role"] = user.get("role", "employee")
+            cookies.save()
+            st.success(f"✅ Đăng nhập thành công! Chào {user['username']}")
+            time.sleep(0.5)  # cho người dùng thấy thông báo
+            st.experimental_rerun()  # reload giao diện
+        else:
+            st.error("❌ Sai username hoặc password")
 
 
 def logout():
-    st.session_state.clear()
-    cookies["username"] = ""
-    cookies["role"] = ""
-    cookies.save()
-    time.sleep(1)
-    st.session_state["rerun_needed"] = True
+    with st.spinner("🚪 Đang đăng xuất..."):
+        time.sleep(0.5)
+        st.session_state.clear()
+        cookies["username"] = ""
+        cookies["role"] = ""
+        cookies.save()
+        st.success("✅ Bạn đã đăng xuất thành công!")
+        time.sleep(0.5)
+        st.experimental_rerun()  # reload giao diện
 
 
 def send_leave_request(leave_date, reason):
     with st.spinner("📨 Đang gửi yêu cầu..."):
-        time.sleep(1)  # giả lập delay nếu cần
+        time.sleep(0.5)  # mô phỏng delay
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         request_leave(st.session_state["username"], str(leave_date), reason)
-        st.session_state["rerun_needed"] = True
+        st.success(f"📤 Yêu cầu nghỉ đã được gửi lúc {now_str}!")
 
 
 def approve_leave(l_id, user_name):
     with st.spinner("✅ Đang duyệt..."):
-        time.sleep(1)
+        time.sleep(0.5)
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         update_leave_status(l_id, "approved")
-        st.session_state["rerun_needed"] = True
+        st.success(f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
 
 
 def reject_leave(l_id, user_name):
     with st.spinner("❌ Đang từ chối..."):
-        time.sleep(1)
+        time.sleep(0.5)
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         update_leave_status(l_id, "rejected")
-        st.session_state["rerun_needed"] = True
+        st.error(f"❌ Yêu cầu của {user_name} đã bị từ chối lúc {now_str}!")
 
 
 # --- Login UI ---
@@ -143,7 +141,6 @@ if "username" not in st.session_state:
     password = st.text_input("🔑 Password", type="password")
     st.button("🚀 Login", on_click=do_login, args=(username, password))
     time.sleep(1)
-    st.session_state["rerun_needed"] = True
 else:
     # Sidebar user info
     st.sidebar.success(
