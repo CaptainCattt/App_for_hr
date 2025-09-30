@@ -110,7 +110,7 @@ else:
         cookies.save()
 
         # Reload app về màn hình login
-        st.experimental_rerun()
+        st.rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
