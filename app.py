@@ -1,48 +1,32 @@
 import streamlit as st
 from pymongo import MongoClient
 from bson import ObjectId
-import bcrypt
 
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
 
-client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)  # tránh treo
+client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
 # Collections
 users_col = db["users"]
 leaves_col = db["leaves"]
 
-# --- Auth Helpers ---
+# --- Functions ---
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+def login(username, password):
+    return users_col.find_one({"username": username, "password": password})
 
 
-def check_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
-
-
-def register_user(username, password, role="employee"):
+def register(username, password, role="employee"):
     if users_col.find_one({"username": username}):
         return False
-    hashed_pw = hash_password(password)
     users_col.insert_one(
-        {"username": username, "password": hashed_pw, "role": role})
+        {"username": username, "password": password, "role": role}
+    )
     return True
-
-
-def validate_user(username, password):
-    user = users_col.find_one({"username": username})
-    if not user:
-        return None
-    if check_password(password, user["password"]):
-        return user
-    return None
-
-# --- Leave functions ---
 
 
 def request_leave(username, date, reason):
@@ -61,8 +45,12 @@ def view_leaves(username=None):
 
 
 def update_leave_status(leave_id, new_status):
-    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
-                          "$set": {"status": new_status}})
+    leaves_col.update_one(
+        {"_id": ObjectId(leave_id)},
+        {"$set": {"status": new_status}}
+    )
+
+# --- Helpers ---
 
 
 def status_badge(status: str):
@@ -79,12 +67,16 @@ st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
+    # CSS cho form login
+
+    # Form Login
+    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
     if st.button("🚀 Login"):
-        user = validate_user(username, password)
+        user = login(username, password)
         if user:
             st.session_state["username"] = user["username"]
             st.session_state["role"] = user.get("role", "employee")
@@ -93,14 +85,8 @@ if "username" not in st.session_state:
         else:
             st.error("❌ Sai username hoặc password")
 
-    st.info("👉 Nếu chưa có tài khoản, hãy đăng ký bên dưới:")
-    new_user = st.text_input("Tạo username mới")
-    new_pass = st.text_input("Tạo password mới", type="password")
-    if st.button("📝 Đăng ký"):
-        if register_user(new_user, new_pass):
-            st.success("✅ Tạo tài khoản thành công! Hãy đăng nhập.")
-        else:
-            st.warning("⚠️ Username đã tồn tại.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 else:
     st.sidebar.success(
