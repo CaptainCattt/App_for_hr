@@ -1,131 +1,124 @@
 import streamlit as st
-import psycopg2
-from db import get_connection
+from pymongo import MongoClient
+from bson import ObjectId
 
-# ------------------ DB Functions -------------------
+# --- MongoDB Config ---
+MONGO_URL = st.secrets["MONGO_URL"]
+DB_NAME = "leave_management"
+
+client = MongoClient(MONGO_URL)
+db = client[DB_NAME]
+
+# Collections
+users_col = db["users"]
+leaves_col = db["leaves"]
+
+# --- Functions ---
 
 
 def login(username, password):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, username, role FROM users WHERE username=%s AND password=%s", (username, password))
-            return cur.fetchone()
+    return users_col.find_one({"username": username, "password": password})
 
 
-def create_leave_request(user_id, start_date, end_date, reason):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "INSERT INTO leave_requests (user_id, start_date, end_date, reason) VALUES (%s, %s, %s, %s)",
-                (user_id, start_date, end_date, reason)
-            )
-        conn.commit()
+def register(username, password, role="employee"):
+    if users_col.find_one({"username": username}):
+        return False
+    users_col.insert_one(
+        {"username": username, "password": password, "role": role})
+    return True
 
 
-def get_leave_requests():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT lr.id, u.username, lr.start_date, lr.end_date, lr.reason, lr.status
-                FROM leave_requests lr
-                JOIN users u ON lr.user_id = u.id
-                ORDER BY lr.id DESC
-            """)
-            return cur.fetchall()
+def request_leave(username, date, reason):
+    leaves_col.insert_one({
+        "username": username,
+        "date": date,
+        "reason": reason,
+        "status": "pending"
+    })
 
 
-def update_leave_request(request_id, status):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE leave_requests SET status=%s WHERE id=%s", (status, request_id))
-        conn.commit()
+def view_leaves(username=None):
+    if username:
+        return list(leaves_col.find({"username": username}))
+    return list(leaves_col.find())
 
 
-def get_summary():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT u.username, DATE_TRUNC('month', lr.start_date) AS month, COUNT(*) AS total_days
-                FROM leave_requests lr
-                JOIN users u ON lr.user_id = u.id
-                WHERE lr.status = 'approved'
-                GROUP BY u.username, DATE_TRUNC('month', lr.start_date)
-                ORDER BY month DESC
-            """)
-            return cur.fetchall()
+def update_leave_status(leave_id, new_status):
+    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
+                          "$set": {"status": new_status}})
 
 
-# ------------------ Streamlit UI -------------------
+# --- Streamlit UI ---
 st.title("🚀 Leave Management System")
 
-# 🔍 Debug check secrets
-if "DATABASE_URL" not in st.secrets:
-    st.error("DATABASE_URL is missing in Streamlit Secrets!")
-else:
-    st.write("✅ DATABASE_URL loaded, starts with:",
-             st.secrets["DATABASE_URL"][:30])
+if "username" not in st.session_state:
+    choice = st.radio("Bạn muốn:", ["Đăng nhập", "Đăng ký"])
 
+    if choice == "Đăng nhập":
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Login"):
+            user = login(username, password)
+            if user:
+                st.session_state["username"] = user["username"]
+                st.session_state["role"] = user.get("role", "employee")
+                st.success(f"Xin chào {user['username']} 👋")
+            else:
+                st.error("Sai username hoặc password")
 
-def get_connection():
-    db_url = st.secrets["DATABASE_URL"]
-    return psycopg2.connect(db_url, connect_timeout=10)
-
-# phần code app tiếp tục bên dưới...
-
-
-# Login
-if "user" not in st.session_state:
-    st.subheader("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        user = login(username, password)
-        if user:
-            st.session_state.user = {
-                "id": user[0], "username": user[1], "role": user[2]}
-            st.success(f"Welcome {user[1]} ({user[2]})")
-        else:
-            st.error("Invalid credentials")
+    else:  # Đăng ký
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Register"):
+            if register(username, password):
+                st.success("Đăng ký thành công! Hãy đăng nhập")
+            else:
+                st.error("Username đã tồn tại!")
 
 else:
-    user = st.session_state.user
-    st.sidebar.write(f"👤 {user['username']} ({user['role']})")
-    if st.sidebar.button("Logout"):
-        del st.session_state.user
-        st.experimental_rerun()
+    st.write(
+        f"Bạn đang đăng nhập với tài khoản: {st.session_state['username']} ({st.session_state['role']})")
 
-    # Employee View
-    if user["role"] == "employee":
-        st.header("📅 Submit Leave Request")
-        start_date = st.date_input("Start Date")
-        end_date = st.date_input("End Date")
-        reason = st.text_area("Reason")
-        if st.button("Submit Request"):
-            create_leave_request(user["id"], start_date, end_date, reason)
-            st.success("Request submitted!")
+    tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
 
-    # HR/Admin View
-    elif user["role"] == "hr":
-        st.header("📋 Manage Leave Requests")
-        requests = get_leave_requests()
-        for r in requests:
+    with tab1:
+        date = st.date_input("Ngày nghỉ")
+        reason = st.text_area("Lý do")
+        if st.button("Gửi yêu cầu"):
+            request_leave(st.session_state["username"], str(date), reason)
+            st.success("Đã gửi yêu cầu nghỉ!")
+
+        st.subheader("Lịch sử xin nghỉ")
+        for leave in view_leaves(st.session_state["username"]):
             st.write(
-                f"ID {r[0]} | {r[1]} | {r[2]} → {r[3]} | Reason: {r[4]} | Status: {r[5]}")
-            if r[5] == "pending":
-                col1, col2 = st.columns(2)
+                f"- {leave['date']} | {leave['reason']} | {leave['status']}")
+
+    if st.session_state["role"] == "admin":
+        with tab2:
+            st.subheader("Tất cả yêu cầu nghỉ")
+            all_leaves = view_leaves()
+            for leave in all_leaves:
+                col1, col2, col3, col4 = st.columns([2, 2, 3, 3])
                 with col1:
-                    if st.button("Approve", key=f"approve_{r[0]}"):
-                        update_leave_request(r[0], "approved")
-                        st.experimental_rerun()
+                    st.write(leave["username"])
                 with col2:
-                    if st.button("Reject", key=f"reject_{r[0]}"):
-                        update_leave_request(r[0], "rejected")
+                    st.write(leave["date"])
+                with col3:
+                    st.write(leave["reason"])
+                with col4:
+                    st.write(leave["status"])
+
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button(f"✅ Approve {leave['_id']}", key=f"a{leave['_id']}"):
+                        update_leave_status(leave["_id"], "approved")
+                        st.success(f"Đã duyệt nghỉ cho {leave['username']}")
+                        st.experimental_rerun()
+                with c2:
+                    if st.button(f"❌ Reject {leave['_id']}", key=f"r{leave['_id']}"):
+                        update_leave_status(leave["_id"], "rejected")
+                        st.warning(f"Đã từ chối nghỉ của {leave['username']}")
                         st.experimental_rerun()
 
-        st.header("📊 Dashboard")
-        summary = get_summary()
-        st.write("### Leave Summary")
-        for s in summary:
-            st.write(f"{s[0]} | {s[1].strftime('%Y-%m')} | {s[2]} days")
+    if st.button("Đăng xuất"):
+        st.session_state.clear()
