@@ -104,14 +104,12 @@ else:
 
     if st.sidebar.button("🚪 Đăng xuất"):
         st.session_state.clear()
-
-        # Xóa cookie
         cookies["username"] = ""
         cookies["role"] = ""
         cookies.save()
-
-        # Reload app về màn hình login
-        st.rerun()
+        st.info("✅ Đăng xuất thành công. Reload app sau 5 giây...")
+        time.sleep(5)
+        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
