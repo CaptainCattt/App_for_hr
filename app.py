@@ -155,7 +155,7 @@ else:
                 st.session_state["last_leave_request"] = now_ts
                 time.sleep(3)
                 placeholder.empty()
-
+        st.markdown("<br>"*10, unsafe_allow_html=True)
     # --- Tab quản lý admin ---
     if tab2 is not None:
         with tab2:
