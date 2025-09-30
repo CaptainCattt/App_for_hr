@@ -69,6 +69,14 @@ def status_badge(status: str):
     return colors.get(status, status)
 
 
+if "rerun_needed" not in st.session_state:
+    st.session_state["rerun_needed"] = False
+
+# --- Sau restore session ---
+if st.session_state.get("rerun_needed"):
+    st.session_state["rerun_needed"] = False
+    st.experimental_rerun()
+
 # --- Streamlit UI ---
 st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide")
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
@@ -93,7 +101,7 @@ def do_login(username, password):
             cookies.save()
             st.success(f"✅ Đăng nhập thành công! Chào {user['username']}")
             time.sleep(0.5)  # cho người dùng thấy thông báo
-            st.experimental_rerun()  # reload giao diện
+            st.session_state["rerun_needed"] = True  # <-- dùng flag
         else:
             st.error("❌ Sai username hoặc password")
 
@@ -107,7 +115,7 @@ def logout():
         cookies.save()
         st.success("✅ Bạn đã đăng xuất thành công!")
         time.sleep(0.5)
-        st.experimental_rerun()  # reload giao diện
+        st.session_state["rerun_needed"] = True  # <-- dùng flag
 
 
 def send_leave_request(leave_date, reason):
