@@ -113,12 +113,12 @@ else:
                     if st.button(f"✅ Approve {leave['_id']}", key=f"a{leave['_id']}"):
                         update_leave_status(leave["_id"], "approved")
                         st.success(f"Đã duyệt nghỉ cho {leave['username']}")
-                        st.experimental_rerun()
+                        st.rerun()
                 with c2:
                     if st.button(f"❌ Reject {leave['_id']}", key=f"r{leave['_id']}"):
                         update_leave_status(leave["_id"], "rejected")
                         st.warning(f"Đã từ chối nghỉ của {leave['username']}")
-                        st.experimental_rerun()
+                        st.rerun()
 
     if st.button("Đăng xuất"):
         st.session_state.clear()
