@@ -186,7 +186,7 @@ else:
 
                         # Hai nút duyệt/từ chối luôn nằm **cùng dòng cuối**
                         if leave["status"] == "pending":
-                            btn_col1, btn_col2 = st.columns([1, 1, 1])
+                            btn_col1, btn_col2 = st.columns([1, 6])
                             with btn_col1:
                                 st.button(
                                     "✅ Duyệt", key=f"a{leave['_id']}",
