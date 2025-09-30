@@ -29,7 +29,31 @@ if "username" not in st.session_state:
     username = st.text_input("👤 Username", key="login_username")
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
-    st.button("🚀 Login", on_click=do_login, args=(username, password))
+
+    if st.button("🚀 Login"):
+        user = login(username, password)  # kiểm tra username/password
+        if user:
+            # Lưu thông tin vào session
+            st.session_state["username"] = user["username"]
+            st.session_state["full_name"] = user.get(
+                "full_name", user["username"])
+            st.session_state["role"] = user.get("role", "employee")
+            st.session_state["remaining_days"] = user.get("remaining_days", 12)
+            st.session_state["department"] = user.get("department", "")
+            st.session_state["position"] = user.get("position", "")
+            st.session_state["dob"] = user.get("dob", "")
+            st.session_state["phone"] = user.get("phone", "")
+
+            # Lưu cookies
+            COOKIES["username"] = st.session_state["username"]
+            COOKIES["role"] = st.session_state["role"]
+            COOKIES.save()
+
+            st.success(f"✅ Chào mừng {st.session_state['full_name']}!")
+            st.experimental_rerun()  # reload giao diện
+        else:
+            st.error("❌ Sai username hoặc password")
+
 
 else:
     # Sidebar
