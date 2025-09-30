@@ -81,7 +81,6 @@ else:
 
     if st.sidebar.button("🚪 Đăng xuất"):
         logout()
-        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
