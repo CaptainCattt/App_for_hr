@@ -50,11 +50,11 @@ def status_badge(status: str):
 # --- Callbacks with spinner + notification ---
 
 
-def send_leave_request(username, leave_date, reason):
+def send_leave_request(leave_date, reason):
     with st.spinner("📨 Đang gửi yêu cầu..."):
-        time.sleep(0.5)
+        time.sleep(0.5)  # mô phỏng delay
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        request_leave(username, str(leave_date), reason)
+        request_leave(st.session_state["username"], str(leave_date), reason)
         st.success(f"📤 Yêu cầu nghỉ đã được gửi lúc {now_str}!")
 
 
@@ -75,23 +75,29 @@ def reject_leave(l_id, user_name):
 
 
 def do_login(username, password):
-    user = login(username, password)
-    if user:
-        st.session_state["username"] = user["username"]
-        st.session_state["role"] = user.get("role", "employee")
-        COOKIES["username"] = user["username"]
-        COOKIES["role"] = user.get("role", "employee")
-        COOKIES.save()
-        st.success(f"✅ Đăng nhập thành công! Chào {user['username']}")
-        st.session_state["rerun_needed"] = True
-    else:
-        st.error("❌ Sai username hoặc password")
+    with st.spinner("🔑 Đang đăng nhập..."):
+        time.sleep(0.5)  # giả lập delay
+        user = login(username, password)
+        if user:
+            st.session_state["username"] = user["username"]
+            st.session_state["role"] = user.get("role", "employee")
+            COOKIES["username"] = user["username"]
+            COOKIES["role"] = user.get("role", "employee")
+            COOKIES.save()
+            st.success(f"✅ Đăng nhập thành công! Chào {user['username']}")
+            time.sleep(0.5)  # cho người dùng thấy thông báo
+            st.session_state["rerun_needed"] = True  # <-- dùng flag
+        else:
+            st.error("❌ Sai username hoặc password")
 
 
 def logout():
-    st.session_state.clear()
-    COOKIES["username"] = ""
-    COOKIES["role"] = ""
-    COOKIES.save()
-    st.success("✅ Bạn đã đăng xuất thành công!")
-    st.session_state["rerun_needed"] = True
+    with st.spinner("🚪 Đang đăng xuất..."):
+        time.sleep(0.5)
+        st.session_state.clear()
+        COOKIES["username"] = ""
+        COOKIES["role"] = ""
+        COOKIES.save()
+        st.success("✅ Bạn đã đăng xuất thành công!")
+        time.sleep(0.5)
+        st.session_state["rerun_needed"] = True  # <-- dùng flag
