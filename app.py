@@ -67,63 +67,55 @@ st.set_page_config(page_title="Leave Management", page_icon="📅", layout="wide
 st.title("🚀 Hệ thống Quản lý Nghỉ phép")
 
 if "username" not in st.session_state:
-    # CSS cho form đẹp hơn
+    # CSS cho form login
     st.markdown("""
         <style>
         .login-box {
-            background-color: white;
+            background-color: #ffffff;
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            max-width: 400px;
-            margin: auto;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            max-width: 380px;
+            margin: 80px auto;
+            text-align: center;
         }
         .stTextInput>div>div>input {
             border-radius: 10px;
-            border: 1px solid #d3d3d3;
-            padding: 10px;
+            border: 1px solid #ccc;
+            padding: 12px;
         }
         .stButton>button {
-            background-color: #4CAF50;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
             color: white;
             font-weight: bold;
             border-radius: 10px;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             transition: 0.3s;
+            width: 100%;
         }
         .stButton>button:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
+            background: linear-gradient(90deg, #45a049, #3e8e41);
+            transform: scale(1.03);
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Hiển thị form login/register
+    # Form Login
     st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.markdown("### 🔑 Đăng nhập / Đăng ký")
-
-    choice = st.radio("Bạn muốn:", ["Đăng nhập", "Đăng ký"], horizontal=True)
+    st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
-    if choice == "Đăng nhập":
-        if st.button("🔓 Login"):
-            user = login(username, password)
-            if user:
-                st.session_state["username"] = user["username"]
-                st.session_state["role"] = user.get("role", "employee")
-                st.success(f"Xin chào {user['username']} 👋")
-                st.rerun()
-            else:
-                st.error("❌ Sai username hoặc password")
-
-    else:  # Đăng ký
-        if st.button("📝 Register"):
-            if register(username, password):
-                st.success("🎉 Đăng ký thành công! Hãy đăng nhập")
-            else:
-                st.error("⚠️ Username đã tồn tại!")
+    if st.button("🚀 Login"):
+        user = login(username, password)
+        if user:
+            st.session_state["username"] = user["username"]
+            st.session_state["role"] = user.get("role", "employee")
+            st.success(f"Xin chào {user['username']} 👋")
+            st.rerun()
+        else:
+            st.error("❌ Sai username hoặc password")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
