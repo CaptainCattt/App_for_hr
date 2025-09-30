@@ -8,3 +8,4 @@ pandas
 bcrypt
 python-dotenv
 pymongo
+streamlit_authenticator 
