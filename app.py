@@ -12,14 +12,12 @@ if "username" not in st.session_state and COOKIES.get("username"):
     st.session_state["username"] = COOKIES.get("username")
     st.session_state["role"] = COOKIES.get("role")
 
-# --- Đầu file ---
+# --- Flags ---
 if "rerun_needed" not in st.session_state:
     st.session_state["rerun_needed"] = False
 
-# --- Sau restore session ---
 if st.session_state.get("rerun_needed"):
     st.session_state["rerun_needed"] = False
-
     try:
         st.experimental_rerun()
     except AttributeError:
@@ -28,8 +26,9 @@ if st.session_state.get("rerun_needed"):
 # --- Login UI ---
 if "username" not in st.session_state:
     st.markdown("## 🔑 Đăng nhập hệ thống")
-    username = st.text_input("👤 Username")
-    password = st.text_input("🔑 Password", type="password")
+    username = st.text_input("👤 Username", key="login_username")
+    password = st.text_input(
+        "🔑 Password", type="password", key="login_password")
     st.button("🚀 Login", on_click=do_login, args=(username, password))
 
 else:
@@ -44,27 +43,27 @@ else:
     # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
-        leave_date = st.date_input("Ngày nghỉ", value=date.today())
-        reason = st.text_area("Lý do")
-        st.session_state["leave_date"] = st.date_input(
-            "Ngày nghỉ", value=date.today())
-        st.session_state["reason"] = st.text_area("Lý do")
+        leave_date = st.date_input(
+            "Chọn ngày nghỉ", value=date.today(), key="leave_date_input")
+        reason = st.text_area("Lý do nghỉ", key="leave_reason_input")
 
         st.button(
             "📨 Gửi yêu cầu",
-            on_click=lambda: send_leave_request(
-                st.session_state["leave_date"], st.session_state["reason"]
-            )
+            key="send_leave_btn",
+            on_click=lambda: send_leave_request(leave_date, reason)
         )
 
         st.divider()
         st.subheader("📜 Lịch sử xin nghỉ")
-        leaves = sorted(view_leaves(st.session_state["username"]),
-                        key=lambda x: x["date"], reverse=True)
+        leaves = sorted(
+            view_leaves(st.session_state["username"]),
+            key=lambda x: x["date"],
+            reverse=True
+        )
         if not leaves:
             st.info("Bạn chưa có yêu cầu nghỉ nào.")
         else:
-            for leave in leaves:
+            for i, leave in enumerate(leaves):
                 with st.expander(f"{leave['date']} - {status_badge(leave['status'])}"):
                     st.write(f"**Lý do:** {leave['reason']}")
 
@@ -77,7 +76,7 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                for leave in all_leaves:
+                for idx, leave in enumerate(all_leaves):
                     with st.container():
                         st.markdown("---")
                         col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
@@ -94,12 +93,14 @@ else:
                             with btn_col1:
                                 st.button(
                                     "✅ Duyệt",
-                                    key=f"a{leave['_id']}",
+                                    key=f"approve_{leave['_id']}",
                                     on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(
                                         l_id, u)
                                 )
                             with btn_col2:
-                                st.button("❌ Từ chối", key=f"a{leave['_id']}",
-                                          on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
-                                              l_id, u)
-                                          )
+                                st.button(
+                                    "❌ Từ chối",
+                                    key=f"reject_{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
+                                        l_id, u)
+                                )
