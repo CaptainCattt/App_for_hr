@@ -34,7 +34,13 @@ if "username" not in st.session_state:
 else:
     # Sidebar
     st.sidebar.success(
-        f"👤 {st.session_state['username']} ({st.session_state['role']})")
+        f"👤 {st.session_state['full_name']} ({st.session_state['role']})\n"
+        f"Phòng ban: {st.session_state['department']}\n"
+        f"Chức vụ: {st.session_state['position']}\n"
+        f"Ngày sinh: {st.session_state['dob']}\n"
+        f"SĐT: {st.session_state['phone']}\n"
+        f"Ngày nghỉ còn lại: {st.session_state['remaining_days']}"
+    )
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # Tabs

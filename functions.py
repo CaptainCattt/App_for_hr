@@ -22,12 +22,15 @@ def register(username, password, role="employee"):
 # --- Leave functions ---
 
 
-def request_leave(username, date_str, reason):
+def request_leave(username, leave_date, reason):
     LEAVES_COL.insert_one({
         "username": username,
-        "date": date_str,
+        "request_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "leave_date": leave_date.strftime("%Y-%m-%d"),
         "reason": reason,
-        "status": "pending"
+        "status": "pending",
+        "approved_by": None,
+        "approved_date": None
     })
 
 
