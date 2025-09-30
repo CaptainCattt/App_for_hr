@@ -177,7 +177,7 @@ else:
 
                         # Dòng thông tin: Username, Ngày, Status
                         # Dòng thông tin: Username, Ngày, Status
-                        col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+                        col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {leave['date']}")
                         col3.empty()  # giữ khoảng trống
