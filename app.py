@@ -24,7 +24,21 @@ if st.session_state.get("rerun_needed"):
         pass
 
 # --- Login UI ---
-if "username" not in st.session_state:
+# Khởi tạo session state mặc định để tránh KeyError
+for key, default in {
+    "username": "",
+    "full_name": "",
+    "role": "",
+    "remaining_days": 0,
+    "department": "",
+    "position": "",
+    "dob": "",
+    "phone": ""
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = default
+
+if not st.session_state["username"]:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username", key="login_username")
     password = st.text_input(
@@ -34,9 +48,9 @@ if "username" not in st.session_state:
         user = login(username, password)  # kiểm tra username/password
         if user:
             # Lưu thông tin vào session
-            st.session_state["username"] = user["username"]
+            st.session_state["username"] = user.get("username", "")
             st.session_state["full_name"] = user.get(
-                "full_name", user["username"])
+                "full_name", st.session_state["username"])
             st.session_state["role"] = user.get("role", "employee")
             st.session_state["remaining_days"] = user.get("remaining_days", 12)
             st.session_state["department"] = user.get("department", "")
@@ -54,18 +68,20 @@ if "username" not in st.session_state:
         else:
             st.error("❌ Sai username hoặc password")
 
-
 else:
-    # Sidebar
+    # Sidebar hiển thị thông tin user
     st.sidebar.success(
-        f"👤 {st.session_state['full_name']} ({st.session_state['role']})\n"
-        f"Phòng ban: {st.session_state['department']}\n"
-        f"Chức vụ: {st.session_state['position']}\n"
-        f"Ngày sinh: {st.session_state['dob']}\n"
-        f"SĐT: {st.session_state['phone']}\n"
-        f"Ngày nghỉ còn lại: {st.session_state['remaining_days']}"
+        f"👤 {st.session_state.get('full_name', st.session_state['username'])} ({st.session_state.get('role', '')})\n"
+        f"Phòng ban: {st.session_state.get('department', '')}\n"
+        f"Chức vụ: {st.session_state.get('position', '')}\n"
+        f"Ngày sinh: {st.session_state.get('dob', '')}\n"
+        f"SĐT: {st.session_state.get('phone', '')}\n"
+        f"Ngày nghỉ còn lại: {st.session_state.get('remaining_days', 0)}"
     )
-    st.sidebar.button("🚪 Đăng xuất", on_click=logout)
+
+    if st.sidebar.button("🚪 Đăng xuất"):
+        logout()
+        st.experimental_rerun()
 
     # Tabs
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
