@@ -2,14 +2,16 @@ import streamlit as st
 from pymongo import MongoClient
 from bson import ObjectId
 
-# Lấy connection string từ secrets
+# --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
+DB_NAME = "leave_management"
 
-# Kết nối Mongo
 client = MongoClient(MONGO_URL)
-db = client["leave_management"]   # Database
-users_col = db["users"]           # Collection users
-leaves_col = db["leaves"]         # ✅ Collection mới để lưu yêu cầu nghỉ
+db = client[DB_NAME]
+
+# Collections
+users_col = db["users"]
+leaves_col = db["leaves"]
 
 # --- Functions ---
 
@@ -42,10 +44,8 @@ def view_leaves(username=None):
 
 
 def update_leave_status(leave_id, new_status):
-    leaves_col.update_one(
-        {"_id": ObjectId(leave_id)},
-        {"$set": {"status": new_status}}
-    )
+    leaves_col.update_one({"_id": ObjectId(leave_id)}, {
+                          "$set": {"status": new_status}})
 
 
 # --- Streamlit UI ---
@@ -63,7 +63,6 @@ if "username" not in st.session_state:
                 st.session_state["username"] = user["username"]
                 st.session_state["role"] = user.get("role", "employee")
                 st.success(f"Xin chào {user['username']} 👋")
-                st.experimental_rerun()
             else:
                 st.error("Sai username hoặc password")
 
@@ -82,7 +81,6 @@ else:
 
     tab1, tab2 = st.tabs(["📅 Xin nghỉ", "📋 Quản lý"])
 
-    # --- Tab nhân viên xin nghỉ ---
     with tab1:
         date = st.date_input("Ngày nghỉ")
         reason = st.text_area("Lý do")
@@ -95,7 +93,6 @@ else:
             st.write(
                 f"- {leave['date']} | {leave['reason']} | {leave['status']}")
 
-    # --- Tab admin quản lý ---
     if st.session_state["role"] == "admin":
         with tab2:
             st.subheader("Tất cả yêu cầu nghỉ")
@@ -125,4 +122,3 @@ else:
 
     if st.button("Đăng xuất"):
         st.session_state.clear()
-        st.experimental_rerun()
