@@ -84,18 +84,15 @@ if "rerun_needed" not in st.session_state:
 if "leave_submitted" not in st.session_state:
     st.session_state["leave_submitted"] = False
 
+# --- Rerun if flag set ---
+if st.session_state.get("rerun_needed"):
+    with st.spinner("⏳ Đang xử lý, vui lòng đợi..."):
+        time.sleep(1)  # spinner hiển thị 1 giây
+    st.session_state["rerun_needed"] = False
+    st.experimental_rerun()
+
 
 # --- Logout callback ---
-
-
-def logout():
-    st.session_state.clear()
-    cookies["username"] = ""
-    cookies["role"] = ""
-    cookies.save()
-    st.session_state["rerun_needed"] = True
-
-# --- Login callback ---
 
 
 def do_login(username, password):
@@ -110,14 +107,18 @@ def do_login(username, password):
     else:
         st.error("❌ Sai username hoặc password")
 
-# --- Leave request callback ---
+
+def logout():
+    st.session_state.clear()
+    cookies["username"] = ""
+    cookies["role"] = ""
+    cookies.save()
+    st.session_state["rerun_needed"] = True
 
 
 def send_leave_request(leave_date, reason):
     request_leave(st.session_state["username"], str(leave_date), reason)
     st.session_state["rerun_needed"] = True
-
-# --- Approve/Reject callbacks ---
 
 
 def approve_leave(l_id, user_name):
