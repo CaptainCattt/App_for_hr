@@ -14,7 +14,7 @@ st.markdown(
     <div style='top: 30px; left: 40px; z-index: 1000;'>
         <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='150'/>
     </div>
-    <h1 style='text-align: center;'> 🏢 Hệ thống Quản lý Nghỉ phép </h1>""",
+    <h1 style='text-align: center;'> 🏢 Hệ thống Quản lý Nghỉ phép 🏢</h1>""",
     unsafe_allow_html=True,
 )
 
@@ -222,7 +222,7 @@ else:
                         approved_by = leave.get("approved_by", "Chưa duyệt")
                         approved_at = leave.get("approved_at", "")
 
-                        col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
+                        col1, col2, col3, col4 = st.columns(4)
                         col1.write(f"👤 {leave['username']}")
                         col2.write(f"📅 {start} → {end} ({duration} ngày)")
                         col3.write(f"🗂 {leave_type} / {leave_case}")
