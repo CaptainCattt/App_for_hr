@@ -187,32 +187,38 @@ else:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
 
-            # CSS để scroll
+            # CSS để scroll cho phần quản lý
             scroll_style = """
                 <style>
-                    .scrollable {
+                    .scroll-box {
                         max-height: 500px;
                         overflow-y: auto;
                         padding-right: 10px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        background-color: #fafafa;
                     }
                 </style>
             """
             st.markdown(scroll_style, unsafe_allow_html=True)
 
-            st.markdown('<div class="scrollable">', unsafe_allow_html=True)
-
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
-                    x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"),
+                    x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"
+                ),
                 reverse=True
             )
 
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                for leave in all_leaves:
-                    with st.container():
+                # bọc danh sách trong 1 div có class scroll-box
+                with st.container():
+                    st.markdown('<div class="scroll-box">',
+                                unsafe_allow_html=True)
+
+                    for leave in all_leaves:
                         st.markdown("---")
                         start = leave.get("start_date", "")
                         end = leave.get("end_date", "")
@@ -227,13 +233,13 @@ else:
                         col2.write(f"📅 {start} → {end} ({duration} ngày)")
                         col3.write(f"🗂 {leave_type} / {leave_case}")
                         col4.write(status_badge(
-                            leave.get('status', 'pending')))
+                            leave.get('status', 'pending'))
+                        )
 
                         st.write(f"📝 Lý do: {leave.get('reason','')}")
                         if leave.get('status') != "pending":
                             st.write(
-                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}"
-                            )
+                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
 
                         if leave.get("status") == "pending":
                             btn_col1, btn_col2 = st.columns([8, 1])
@@ -250,7 +256,7 @@ else:
                                         l_id, u)
                                 )
 
-            st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     # --- Tab lịch sử ---
     with tab3:
