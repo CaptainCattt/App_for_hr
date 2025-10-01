@@ -41,13 +41,13 @@ def verify_jwt(token):
 
 
 def get_current_user():
-    """Lấy thông tin user từ cookie + JWT, verify session_id"""
     token = COOKIES.get(SESSION_COOKIE_KEY)
     if not token:
         return None
 
-    payload = verify_jwt(token)
-    if not payload:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
@@ -59,12 +59,20 @@ def get_current_user():
         COOKIES.save()
         return None
 
-    # Tìm user và kiểm tra session_id tồn tại trong sessions
-    user = USERS_COL.find_one({
-        "username": username,
-        "sessions.sid": session_id
-    })
+    user = USERS_COL.find_one({"username": username})
     if not user:
+        COOKIES[SESSION_COOKIE_KEY] = ""
+        COOKIES.save()
+        return None
+
+    # --- Check session_id tồn tại trong sessions ---
+    valid = False
+    for s in user.get("sessions", []):
+        if s["sid"] == session_id and s["expires_at"] > datetime.utcnow():
+            valid = True
+            break
+
+    if not valid:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
@@ -88,6 +96,7 @@ def do_login(username, password):
 
     user = USERS_COL.find_one({"username": username})
     if not user:
+        # Tạo user mới
         USERS_COL.insert_one({
             "username": username,
             "password": password,
@@ -103,23 +112,36 @@ def do_login(username, password):
     else:
         if user.get("password") != password:
             placeholder.error("❌ Sai username hoặc password")
-            time.sleep(1.2)
+            time.sleep(1)
             placeholder.empty()
             return False
 
     # --- Tạo session_id mới ---
     session_id = str(uuid.uuid4())
-    USERS_COL.update_one({"_id": user["_id"]}, {"$push": {
-        "sessions": {
-            "sid": session_id,
-            "created_at": datetime.utcnow()
-        }
-    }})
+    exp = datetime.utcnow() + timedelta(hours=8)
+    session_data = {
+        "sid": session_id,
+        "created_at": datetime.utcnow(),
+        "expires_at": exp
+    }
+
+    # --- Lưu vào mảng sessions của user ---
+    USERS_COL.update_one(
+        {"_id": user["_id"]},
+        {"$push": {"sessions": session_data}}
+    )
 
     # --- Tạo JWT ---
-    token, exp = create_jwt_for_user(user, session_id)
+    payload = {
+        "sid": session_id,
+        "sub": str(user["_id"]),
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "exp": exp
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
-    # --- Lưu cookie ---
+    # --- Lưu cookie riêng cho thiết bị này ---
     COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
 
@@ -143,20 +165,27 @@ def do_login(username, password):
 
 def logout():
     token = COOKIES.get(SESSION_COOKIE_KEY)
-    payload = verify_jwt(token)
-    if payload:
-        session_id = payload.get("sid")
-        USERS_COL.update_one({"username": payload.get("username")}, {"$pull": {
-            "sessions": {"sid": session_id}
-        }})
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("sid")
+            username = payload.get("username")
+            if username and session_id:
+                USERS_COL.update_one(
+                    {"username": username},
+                    {"$pull": {"sessions": {"sid": session_id}}}
+                )
+        except:
+            pass
 
     COOKIES[SESSION_COOKIE_KEY] = ""
     COOKIES.save()
+
     for k in ["username", "role", "full_name", "position", "department", "remaining_days"]:
         if k in st.session_state:
             del st.session_state[k]
-    st.session_state["rerun_needed"] = True
 
+    st.session_state["rerun_needed"] = True
 
 # ---------------------------
 # Leave-related functions
