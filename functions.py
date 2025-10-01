@@ -19,12 +19,12 @@ SESSION_DURATION_HOURS = 8  # token/session lifetime
 
 def create_jwt_for_user(user):
     exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
-    session_id = str(uuid.uuid4())  # mỗi lần login sinh session_id mới
+    session_id = str(uuid.uuid4())  # sinh session_id duy nhất
     payload = {
+        "sid": session_id,  # session id
         "sub": str(user.get("_id", "")),
         "username": user["username"],
         "role": user.get("role", "employee"),
-        "session_id": session_id,
         "exp": exp
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
@@ -33,10 +33,10 @@ def create_jwt_for_user(user):
 
 def save_session(token, username, role, expired_at, session_id, meta=None):
     doc = {
+        "session_id": session_id,
         "token": token,
         "username": username,
         "role": role,
-        "session_id": session_id,
         "expired_at": expired_at,
         "meta": meta or {},
         "created_at": datetime.utcnow()
