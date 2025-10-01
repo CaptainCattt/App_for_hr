@@ -5,7 +5,7 @@ from functions import *
 from bson import ObjectId
 import time
 from functools import partial
-
+import pandas as pd
 
 st.set_page_config(page_title="Request for Time Off", layout="wide")
 
@@ -187,21 +187,6 @@ else:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
 
-            # CSS để scroll cho phần quản lý
-            scroll_style = """
-                <style>
-                    .scroll-box {
-                        max-height: 500px;
-                        overflow-y: auto;
-                        padding-right: 10px;
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        background-color: #fafafa;
-                    }
-                </style>
-            """
-            st.markdown(scroll_style, unsafe_allow_html=True)
-
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
@@ -213,50 +198,34 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                # bọc danh sách trong 1 div có class scroll-box
-                with st.container():
-                    st.markdown('<div class="scroll-box">',
-                                unsafe_allow_html=True)
+                # Chuẩn hóa data cho bảng
+                table_data = []
+                for leave in all_leaves:
+                    start = leave.get("start_date", "")
+                    end = leave.get("end_date", "")
+                    duration = leave.get("duration", "")
+                    leave_type = leave.get("leave_type", "")
+                    leave_case = leave.get("leave_case", "")
+                    approved_by = leave.get("approved_by", "Chưa duyệt")
+                    approved_at = leave.get("approved_at", "")
+                    reason = leave.get("reason", "")
+                    status = leave.get("status", "pending")
 
-                    for leave in all_leaves:
-                        st.markdown("---")
-                        start = leave.get("start_date", "")
-                        end = leave.get("end_date", "")
-                        duration = leave.get("duration", "")
-                        leave_type = leave.get("leave_type", "")
-                        leave_case = leave.get("leave_case", "")
-                        approved_by = leave.get("approved_by", "Chưa duyệt")
-                        approved_at = leave.get("approved_at", "")
+                    table_data.append({
+                        "👤 Nhân viên": leave.get("username", ""),
+                        "📅 Thời gian": f"{start} → {end} ({duration} ngày)",
+                        "🗂 Loại nghỉ": f"{leave_type} / {leave_case}",
+                        "📝 Lý do": reason,
+                        "📌 Trạng thái": status_badge(status),
+                        "✅ Người duyệt": f"{approved_by} {approved_at}"
+                    })
 
-                        col1, col2, col3, col4 = st.columns(4)
-                        col1.write(f"👤 {leave['username']}")
-                        col2.write(f"📅 {start} → {end} ({duration} ngày)")
-                        col3.write(f"🗂 {leave_type} / {leave_case}")
-                        col4.write(status_badge(
-                            leave.get('status', 'pending'))
-                        )
+                df = pd.DataFrame(table_data)
 
-                        st.write(f"📝 Lý do: {leave.get('reason','')}")
-                        if leave.get('status') != "pending":
-                            st.write(
-                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
+                # Hiển thị dạng bảng có scroll
+                st.dataframe(df, use_container_width=True, height=500)
 
-                        if leave.get("status") == "pending":
-                            btn_col1, btn_col2 = st.columns([8, 1])
-                            with btn_col1:
-                                st.button(
-                                    "✅ Duyệt", key=f"approve_{leave['_id']}",
-                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(
-                                        l_id, u)
-                                )
-                            with btn_col2:
-                                st.button(
-                                    "❌ Từ chối", key=f"reject_{leave['_id']}",
-                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
-                                        l_id, u)
-                                )
-
-                    st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # --- Tab lịch sử ---
     with tab3:
