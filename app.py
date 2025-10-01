@@ -185,7 +185,10 @@ else:
     # --- Tab quản lý admin ---
     if tab2 is not None:
         with tab2:
-            st.subheader("📊 Quản lý yêu cầu nghỉ")
+            st.markdown(
+                "<h3 style='text-align: center;'>📊 Quản lý yêu cầu nghỉ</h3>",
+                unsafe_allow_html=True
+            )
 
             all_leaves = sorted(
                 view_leaves(),
