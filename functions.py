@@ -90,34 +90,49 @@ def get_current_user():
 def do_login(username, password):
     """
     Authenticate user, create JWT and session record, set cookie.
-    Fix: tránh ghi đè user khác trên cùng 1 máy/browser
+    Nếu user chưa có trong DB thì tạo mới.
+    Tạo session mới cho user hiện tại mà không xóa session của người khác.
     """
     placeholder = st.empty()
     with placeholder:
         st.info("🔑 Đang đăng nhập...")
     time.sleep(0.4)
 
-    user = USERS_COL.find_one({"username": username, "password": password})
+    # --- Kiểm tra user ---
+    user = USERS_COL.find_one({"username": username})
     if not user:
-        placeholder.error("❌ Sai username hoặc password")
-        time.sleep(1.2)
-        placeholder.empty()
-        return False
+        # Nếu chưa có user, tạo mới
+        USERS_COL.insert_one({
+            "username": username,
+            "password": password,
+            "role": "employee",
+            "full_name": username,
+            "position": "",
+            "department": "",
+            "remaining_days": 0,
+            "created_at": time.time()
+        })
+        user = USERS_COL.find_one({"username": username})
+    else:
+        # Nếu có user, check password
+        if user.get("password") != password:
+            placeholder.error("❌ Sai username hoặc password")
+            time.sleep(1.2)
+            placeholder.empty()
+            return False
 
-    # --- Check nếu đã có user khác login trên máy này ---
+    # --- Invalidate session hiện tại trên cookie (chỉ của client này) ---
     current_token = COOKIES.get(SESSION_COOKIE_KEY)
     if current_token:
-        # Xóa session cũ trên DB
         SESSIONS_COL.delete_one({"token": current_token})
-        # Xóa cookie cũ
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
 
-    # --- Tạo token mới + session_id duy nhất ---
-    session_id = str(uuid.uuid4())  # duy nhất cho client này
+    # --- Tạo session_id mới và JWT ---
+    session_id = str(uuid.uuid4())
     token, exp, _ = create_jwt_for_user(user, session_id=session_id)
 
-    # Save session doc
+    # Lưu session mới
     save_session(token, user["username"], user.get(
         "role", "employee"), exp, session_id)
 
@@ -125,7 +140,7 @@ def do_login(username, password):
     COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
 
-    # populate session_state
+    # Populate session_state
     st.session_state["username"] = user["username"]
     st.session_state["role"] = user.get("role", "employee")
     st.session_state["full_name"] = user.get("full_name", user["username"])
@@ -138,7 +153,6 @@ def do_login(username, password):
     time.sleep(1)
     placeholder.empty()
 
-    # ask app to rerun to refresh UI
     st.session_state["rerun_needed"] = True
     return True
 
