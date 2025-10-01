@@ -1,12 +1,32 @@
 # functions.py
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit as st
 import time
-from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS
 import secrets
-from datetime import datetime, timedelta
-from auth import SESSIONS_COL
+from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS, SESSIONS_COL
+
+
+def get_current_user():
+    token = COOKIES.get("session_token")
+    if not token:
+        return None
+
+    session = SESSIONS_COL.find_one({"token": token})
+    if not session:
+        return None
+
+    # Nếu session hết hạn thì xóa đi
+    if session["expired_at"] < datetime.now():
+        SESSIONS_COL.delete_one({"token": token})
+        COOKIES["session_token"] = ""
+        COOKIES.save()
+        return None
+
+    return {
+        "username": session["username"],
+        "role": session["role"]
+    }
 
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
