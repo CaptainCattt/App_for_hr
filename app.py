@@ -187,20 +187,6 @@ else:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
 
-            # CSS để scroll
-            scroll_style = """
-                <style>
-                    .scrollable-table {
-                        max-height: 500px;
-                        overflow-y: auto;
-                        padding-right: 10px;
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                    }
-                </style>
-            """
-            st.markdown(scroll_style, unsafe_allow_html=True)
-
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
@@ -220,7 +206,7 @@ else:
                                                                                              2, 3, 2, 2, 2])
                 header_col1.write("👤 Nhân viên")
                 header_col2.write("📅 Thời gian")
-                header_col3.write("🗂 Loại nghỉ")
+                header_col3.write("♾️ Loại nghỉ")
                 header_col4.write("📌 Trạng thái")
                 header_col5.write("📝 Thao tác")
 
