@@ -48,14 +48,24 @@ def status_badge(status: str):
 
 
 def send_leave_request(username, start_date, end_date, duration, reason, leave_type, leave_case):
+    # Khóa button ngay khi bấm
+    st.session_state["leave_btn_disabled"] = True
+    st.session_state["last_leave_request"] = time.time()
+
     placeholder = st.empty()
-    with placeholder:
-        st.info("📨 Đang gửi yêu cầu...")
-    time.sleep(0.5)
+    placeholder.info("📨 Đang gửi yêu cầu...")
+
+    # Chuẩn hóa ngày
+    start_str = start_date.strftime(
+        "%Y-%m-%d") if not isinstance(start_date, str) else start_date
+    end_str = end_date.strftime(
+        "%Y-%m-%d") if not isinstance(end_date, str) else end_date
+
+    # Insert vào DB
     LEAVES_COL.insert_one({
         "username": username,
-        "start_date": start_date.strftime("%Y-%m-%d") if not isinstance(start_date, str) else start_date,
-        "end_date": end_date.strftime("%Y-%m-%d") if not isinstance(end_date, str) else end_date,
+        "start_date": start_str,
+        "end_date": end_str,
         "duration": duration,
         "reason": reason,
         "leave_type": leave_type,
@@ -65,34 +75,28 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
         "approved_by": None,
         "approved_at": None
     })
+
+    # Thông báo thành công
     placeholder.success(
-        f"📤 Yêu cầu '{leave_case}' từ {start_date} đến {end_date} ({duration} ngày) đã gửi!")
-    time.sleep(3)
+        f"📤 Yêu cầu '{leave_case}' từ {start_str} đến {end_str} ({duration} ngày) đã gửi!"
+    )
+    time.sleep(1.5)
     placeholder.empty()
 
 
 def approve_leave(l_id, user_name):
-    if "approve_btn_disabled" not in st.session_state:
-        st.session_state["approve_btn_disabled"] = {}
-
-    # Khóa button cho leave này nếu đã bấm
-    if st.session_state["approve_btn_disabled"].get(l_id, False):
-        return
-
     placeholder = st.empty()
-    placeholder.info("✅ Đang duyệt...")
-
+    with placeholder:
+        st.info("✅ Đang duyệt...")
+    time.sleep(0.5)
     leave = LEAVES_COL.find_one({"_id": ObjectId(l_id)})
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    LEAVES_COL.update_one(
-        {"_id": ObjectId(l_id)},
-        {"$set": {
-            "status": "approved",
-            "approved_by": st.session_state.get("full_name", "Admin"),
-            "approved_at": now_str
-        }}
-    )
+    LEAVES_COL.update_one({"_id": ObjectId(l_id)}, {"$set": {
+        "status": "approved",
+        "approved_by": st.session_state.get("full_name", "Admin"),
+        "approved_at": now_str
+    }})
 
     if leave.get("leave_type") == "Nghỉ phép năm":
         duration = float(leave.get("duration", 1))
@@ -101,9 +105,8 @@ def approve_leave(l_id, user_name):
 
     placeholder.success(
         f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
-
-    # Khóa button ngay sau khi bấm
-    st.session_state["approve_btn_disabled"][l_id] = True
+    time.sleep(3)
+    placeholder.empty()
 
 
 def reject_leave(l_id, user_name):
