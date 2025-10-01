@@ -13,7 +13,7 @@ SESSION_DURATION_HOURS = 8  # token lifetime
 
 
 def create_jwt_for_user(user):
-    """Tạo JWT chứa thông tin user + session_id duy nhất"""
+    """Tạo JWT cho user, trả về token, thời hạn, session_id"""
     exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
     session_id = str(uuid.uuid4())
     payload = {
@@ -21,10 +21,10 @@ def create_jwt_for_user(user):
         "sub": str(user.get("_id", "")),
         "username": user["username"],
         "role": user.get("role", "employee"),
-        "exp": exp.timestamp()  # lưu timestamp
+        "exp": exp
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
-    return token
+    return token, exp, session_id
 
 
 def verify_jwt(token):
