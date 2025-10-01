@@ -287,7 +287,7 @@ else:
                 approved_by = leave.get("approved_by", "Chưa duyệt")
                 approved_at = leave.get("approved_at", "")
 
-                col1, col2, col3, col4 = st.columns([2, 2, 1, 1.5])
+                col1, col2, col3, col4 = st.columns([2, 2, 2, 4])
                 col1.write(f"📅 {start} → {end} ({duration} ngày)")
                 col2.write(f"📝 {leave_type} / {leave_case}")
                 col3.write(f"♾️Trạng thái: {status_badge(leave['status'])}")
