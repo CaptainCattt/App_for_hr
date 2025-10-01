@@ -130,8 +130,14 @@ else:
         if st.session_state["leave_btn_disabled"]:
             remaining = max(
                 0, int(cooldown - (now_ts - st.session_state["last_leave_request"])))
-            st.info(
-                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+
+            warning_placeholder = st.empty()  # tạo placeholder
+            warning_placeholder.info(
+                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo."
+            )
+
+            # tự động xóa sau 1.5 giây
+            st.experimental_rerun()
         else:
             if st.button("📨 Gửi yêu cầu"):
                 if not reason_text.strip():
