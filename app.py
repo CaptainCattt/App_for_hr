@@ -83,7 +83,7 @@ else:
             "Vui lòng chọn loại ngày nghỉ",
             ("Nghỉ phép năm", "Nghỉ không hưởng lương",
              "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
-            index=0, horizontal=True
+            index=0  # bỏ horizontal
         )
 
         leave_case = ""
