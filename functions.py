@@ -60,22 +60,19 @@ def get_current_user():
     if not token:
         return None
 
-    # Kiểm tra session trong DB
     session_doc = SESSIONS_COL.find_one({"token": token})
     if not session_doc:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # Verify JWT
     payload = verify_jwt(token)
-    if not payload:
+    if not payload or payload.get("sid") != session_doc["session_id"]:
         SESSIONS_COL.delete_one({"token": token})
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # Load user từ DB
     user = USERS_COL.find_one({"username": payload.get("username")})
     if not user:
         return None
