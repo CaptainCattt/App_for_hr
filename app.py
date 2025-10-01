@@ -116,40 +116,41 @@ else:
 
         if "leave_btn_disabled" not in st.session_state:
             st.session_state["leave_btn_disabled"] = False
+        if "last_leave_request" not in st.session_state:
+            st.session_state["last_leave_request"] = 0
 
         cooldown = 60  # giây
-        last_sent = st.session_state.get("last_leave_request", 0)
         now_ts = time.time()
-        remaining = max(0, int(cooldown - (now_ts - last_sent)))
 
         # Tự động mở lại button nếu đã quá cooldown
-        if remaining <= 0:
+        if now_ts - st.session_state["last_leave_request"] >= cooldown:
             st.session_state["leave_btn_disabled"] = False
 
         # Button gửi yêu cầu
-        if st.button("📨 Gửi yêu cầu", disabled=st.session_state["leave_btn_disabled"]):
-            if not reason_text.strip():
-                st.warning("⚠️ Vui lòng nhập lý do nghỉ")
-            else:
-                # Khóa button ngay và cập nhật timestamp trước khi gửi
-                st.session_state["leave_btn_disabled"] = True
-                st.session_state["last_leave_request"] = now_ts
-
-                # Gửi yêu cầu
-                send_leave_request(
-                    st.session_state["username"],
-                    start_date,
-                    end_date,
-                    duration,
-                    reason_text,
-                    leave_type,
-                    leave_case
-                )
-
-        # Hiển thị thông báo cooldown nếu button đang khóa
         if st.session_state["leave_btn_disabled"]:
+            remaining = max(
+                0, int(cooldown - (now_ts - st.session_state["last_leave_request"])))
             st.info(
                 f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+        else:
+            if st.button("📨 Gửi yêu cầu"):
+                if not reason_text.strip():
+                    st.warning("⚠️ Vui lòng nhập lý do nghỉ")
+                else:
+                    # Khóa button ngay và cập nhật timestamp
+                    st.session_state["leave_btn_disabled"] = True
+                    st.session_state["last_leave_request"] = time.time()
+
+                    # Gửi yêu cầu
+                    send_leave_request(
+                        st.session_state["username"],
+                        start_date,
+                        end_date,
+                        duration,
+                        reason_text,
+                        leave_type,
+                        leave_case
+                    )
 
             # Fix nhanh bug UI
         st.markdown("<br>"*15, unsafe_allow_html=True)
