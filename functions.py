@@ -25,10 +25,19 @@ def get_current_user():
         COOKIES.save()
         return None
 
-    return {
-        "username": session["username"],
-        "role": session["role"]
-    }
+    # --- Ghi lại vào session_state khi reload ---
+    st.session_state["username"] = session["username"]
+    st.session_state["role"] = session.get("role", "employee")
+
+    # lấy thêm info từ USERS_COL
+    user = USERS_COL.find_one({"username": session["username"]})
+    if user:
+        st.session_state["full_name"] = user.get("full_name", user["username"])
+        st.session_state["position"] = user.get("position", "")
+        st.session_state["department"] = user.get("department", "")
+        st.session_state["remaining_days"] = user.get("remaining_days", 0)
+
+    return {"username": session["username"], "role": session["role"]}
 
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):

@@ -20,10 +20,8 @@ st.markdown(
 
 st.markdown("<br><br>", unsafe_allow_html=True)  # Tạo khoảng cách sau tiêu đề
 
-# --- Restore session ---
-if "username" not in st.session_state and COOKIES.get("username"):
-    st.session_state["username"] = COOKIES.get("username")
-    st.session_state["role"] = COOKIES.get("role")
+# --- Restore session từ cookies ---
+user = get_current_user()
 
 # --- Flags ---
 if "rerun_needed" not in st.session_state:
