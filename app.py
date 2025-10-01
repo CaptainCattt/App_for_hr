@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 from datetime import date, timedelta, datetime
 from settings import COOKIES
@@ -21,7 +22,7 @@ st.markdown(
 st.markdown("<br><br>", unsafe_allow_html=True)  # Tạo khoảng cách sau tiêu đề
 
 # --- Restore session từ cookies ---
-get_current_user()
+current_user = get_current_user()
 
 # --- Flags ---
 if "rerun_needed" not in st.session_state:
@@ -53,7 +54,7 @@ if st.session_state.get("leave_message"):
     st.session_state["leave_message"] = ""  # reset sau khi hiển thị
 
 # --- Login UI ---
-if not st.session_state.get("username"):
+if not current_user:
     st.markdown("## 🔑 Đăng nhập hệ thống")
     username = st.text_input("👤 Username", key="login_username")
     password = st.text_input(
@@ -69,12 +70,12 @@ if not st.session_state.get("username"):
 else:
     # --- Sidebar thông tin user ---
     st.sidebar.markdown("## 👤 Thông tin nhân viên")
-    st.sidebar.write(f"**Họ tên:** {st.session_state['full_name']}")
-    st.sidebar.write(f"**Username:** {st.session_state['username']}")
-    st.sidebar.write(f"**Chức vụ:** {st.session_state['position']}")
-    st.sidebar.write(f"**Phòng ban:** {st.session_state['department']}")
+    st.sidebar.write(f"**Họ tên:** {current_user['full_name']}")
+    st.sidebar.write(f"**Username:** {current_user['username']}")
+    st.sidebar.write(f"**Chức vụ:** {current_user['position']}")
+    st.sidebar.write(f"**Phòng ban:** {current_user['department']}")
     st.sidebar.write(
-        f"**Ngày nghỉ còn lại:** {st.session_state['remaining_days']}")
+        f"**Ngày nghỉ còn lại:** {current_user['remaining_days']}")
 
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 

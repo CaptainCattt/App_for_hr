@@ -53,43 +53,38 @@ def verify_jwt(token):
 
 
 def get_current_user():
-    """
-    Try to load user from cookie token -> validate -> return dict or None.
-    Also populate st.session_state fields on success.
-    """
     token = COOKIES.get(SESSION_COOKIE_KEY)
     if not token:
         return None
 
-    # Check DB session exists and not expired
+    # Kiểm tra session trong DB
     session_doc = SESSIONS_COL.find_one({"token": token})
     if not session_doc:
-        # remove cookie
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # token should be valid (signature + exp)
+    # Verify JWT
     payload = verify_jwt(token)
     if not payload:
-        # invalid or expired: remove session row and cookie
         SESSIONS_COL.delete_one({"token": token})
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # session ok -> populate session_state (usefull after reload)
-    st.session_state["username"] = payload.get("username")
-    st.session_state["role"] = payload.get("role", "employee")
-
-    # load extra user profile info
+    # Load user từ DB
     user = USERS_COL.find_one({"username": payload.get("username")})
-    if user:
-        st.session_state["full_name"] = user.get("full_name", user["username"])
-        st.session_state["position"] = user.get("position", "")
-        st.session_state["department"] = user.get("department", "")
-        st.session_state["remaining_days"] = user.get("remaining_days", 0)
-    return {"username": payload.get("username"), "role": payload.get("role")}
+    if not user:
+        return None
+
+    return {
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "full_name": user.get("full_name", user["username"]),
+        "position": user.get("position", ""),
+        "department": user.get("department", ""),
+        "remaining_days": user.get("remaining_days", 0)
+    }
 
 
 def do_login(username, password):
