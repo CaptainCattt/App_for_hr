@@ -19,21 +19,24 @@ SESSION_DURATION_HOURS = 8  # token/session lifetime
 
 def create_jwt_for_user(user):
     exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
+    session_id = str(uuid.uuid4())  # mỗi lần login sinh session_id mới
     payload = {
         "sub": str(user.get("_id", "")),
         "username": user["username"],
         "role": user.get("role", "employee"),
+        "session_id": session_id,
         "exp": exp
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
-    return token, exp
+    return token, exp, session_id
 
 
-def save_session(token, username, role, expired_at, meta=None):
+def save_session(token, username, role, expired_at, session_id, meta=None):
     doc = {
         "token": token,
         "username": username,
         "role": role,
+        "session_id": session_id,
         "expired_at": expired_at,
         "meta": meta or {},
         "created_at": datetime.utcnow()
@@ -103,11 +106,13 @@ def do_login(username, password):
         placeholder.empty()
         return False
 
-    token, exp = create_jwt_for_user(user)
+    # tạo token + session_id
+    token, exp, session_id = create_jwt_for_user(user)
     # Save session doc
-    save_session(token, user["username"], user.get("role", "employee"), exp)
+    save_session(token, user["username"], user.get(
+        "role", "employee"), exp, session_id)
 
-    # Set cookie
+    # Set cookie cho session hiện tại
     COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
 
