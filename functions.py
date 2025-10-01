@@ -4,6 +4,9 @@ from datetime import datetime
 import streamlit as st
 import time
 from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS
+import secrets
+from datetime import datetime, timedelta
+from auth import SESSIONS_COL
 
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
@@ -131,18 +134,29 @@ def do_login(username, password):
     placeholder = st.empty()
     user = USERS_COL.find_one({"username": username, "password": password})
     if user:
-        # Lưu thông tin session
+        # Tạo session token
+        token = secrets.token_hex(16)
+        expire_time = datetime.now() + timedelta(hours=12)
+
+        # Lưu session vào MongoDB
+        SESSIONS_COL.insert_one({
+            "token": token,
+            "username": user["username"],
+            "role": user.get("role", "employee"),
+            "expired_at": expire_time
+        })
+
+        # Lưu token vào cookie
+        COOKIES["session_token"] = token
+        COOKIES.save()
+
+        # Lưu session_state (chỉ để tiện render UI lần đầu)
         st.session_state["username"] = user["username"]
         st.session_state["role"] = user.get("role", "employee")
         st.session_state["full_name"] = user.get("full_name", user["username"])
         st.session_state["position"] = user.get("position", "")
         st.session_state["department"] = user.get("department", "")
         st.session_state["remaining_days"] = user.get("remaining_days", 0)
-
-        # Lưu cookie
-        COOKIES["username"] = user["username"]
-        COOKIES["role"] = user.get("role", "employee")
-        COOKIES.save()
 
         placeholder.success(
             f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
@@ -152,7 +166,7 @@ def do_login(username, password):
     time.sleep(1.5)
     placeholder.empty()
 
-    # Yêu cầu app rerun để cập nhật UI
+    # Rerun để cập nhật UI
     st.session_state["rerun_needed"] = True
 
 
@@ -161,11 +175,19 @@ def logout():
     with placeholder:
         st.info("🚪 Đang đăng xuất...")
     time.sleep(0.5)
+
+    token = COOKIES.get("session_token")
+    if token:
+        SESSIONS_COL.delete_one({"token": token})
+
     st.session_state.clear()
-    COOKIES["username"] = ""
-    COOKIES["role"] = ""
+
+    COOKIES["session_token"] = ""
     COOKIES.save()
+
     placeholder.success("✅ Bạn đã đăng xuất thành công!")
     time.sleep(1.5)
     placeholder.empty()
+
+    # Trigger rerun để update UI
     st.session_state["rerun_needed"] = True

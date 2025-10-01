@@ -13,6 +13,7 @@ db = client[DB_NAME]
 # Collections
 USERS_COL = db["users"]
 LEAVES_COL = db["leaves"]
+SESSIONS_COL = db["sessions"]   # <--- thêm bảng session
 
 # --- Cookie Config ---
 COOKIES = EncryptedCookieManager(
