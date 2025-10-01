@@ -174,7 +174,7 @@ else:
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
-                    x.get("start_date", "1900-01-01"), "%Y-%m-%d"),
+                    x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"),
                 reverse=True
             )
 
@@ -241,7 +241,8 @@ else:
 
             user_leaves = sorted(
                 view_leaves(st.session_state["username"]),
-                key=lambda x: x.get("start_date", "1900-01-01"),
+                key=lambda x: datetime.strptime(
+                    x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"),
                 reverse=True
             )
         if not user_leaves:
