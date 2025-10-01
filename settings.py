@@ -14,7 +14,8 @@ db = client[DB_NAME]
 # Collections
 USERS_COL = db["users"]
 LEAVES_COL = db["leaves"]
-SESSIONS_COL = db["sessions"]   # session per-device
+# SESSIONS_COL bỏ hẳn, không dùng nữa
+# SESSIONS_COL = db["sessions"]
 
 # --- Cookie Config ---
 COOKIES = EncryptedCookieManager(
@@ -24,8 +25,7 @@ COOKIES = EncryptedCookieManager(
 if not COOKIES.ready():
     st.stop()
 
-# --- JWT secret ---
-# store a strong secret in Streamlit secrets: "JWT_SECRET"
+# --- JWT secret (nếu có dùng JWT vẫn giữ) ---
 JWT_SECRET = st.secrets.get("JWT_SECRET", os.environ.get(
     "JWT_SECRET", "dev_secret_change_me"))
 

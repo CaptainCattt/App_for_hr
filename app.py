@@ -19,7 +19,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown("<br><br>", unsafe_allow_html=True)  # Tạo khoảng cách sau tiêu đề
+st.markdown("<br><br>", unsafe_allow_html=True)
 
 # --- Restore session từ cookies ---
 current_user = get_current_user()
@@ -51,7 +51,7 @@ for key, default in {
 # --- Hiển thị thông báo approve/reject ---
 if st.session_state.get("leave_message"):
     st.info(st.session_state["leave_message"])
-    st.session_state["leave_message"] = ""  # reset sau khi hiển thị
+    st.session_state["leave_message"] = ""
 
 # --- Login UI ---
 if not current_user:
@@ -62,9 +62,11 @@ if not current_user:
 
     st.button(
         "🚀 Login",
-        on_click=partial(do_login,
-                         st.session_state.get("login_username", ""),
-                         st.session_state.get("login_password", ""))
+        on_click=partial(
+            do_login,
+            st.session_state.get("login_username", ""),
+            st.session_state.get("login_password", "")
+        )
     )
 
 else:
@@ -76,7 +78,6 @@ else:
     st.sidebar.write(f"**Phòng ban:** {current_user['department']}")
     st.sidebar.write(
         f"**Ngày nghỉ còn lại:** {current_user['remaining_days']}")
-
     st.sidebar.button("🚪 Đăng xuất", on_click=logout)
 
     # --- Tabs ---
@@ -94,7 +95,7 @@ else:
             "Vui lòng chọn loại ngày nghỉ",
             ("Nghỉ phép năm", "Nghỉ không hưởng lương",
              "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
-            index=0  # bỏ horizontal
+            index=0
         )
 
         leave_case = ""
@@ -125,39 +126,29 @@ else:
             "Ngày kết thúc nghỉ", value=end_date_default)
         reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
+        # Cooldown logic
         if "leave_btn_disabled" not in st.session_state:
             st.session_state["leave_btn_disabled"] = False
         if "last_leave_request" not in st.session_state:
             st.session_state["last_leave_request"] = 0
 
-        cooldown = 60  # giây
+        cooldown = 60
         now_ts = time.time()
         last_sent = st.session_state.get("last_leave_request", 0)
         remaining = max(0, int(cooldown - (now_ts - last_sent)))
 
-        if "leave_btn_disabled" not in st.session_state:
-            st.session_state["leave_btn_disabled"] = False
-        if "show_cooldown_warning" not in st.session_state:
-            st.session_state["show_cooldown_warning"] = False
-
-        # Tự mở lại nếu hết cooldown
         if remaining <= 0:
             st.session_state["leave_btn_disabled"] = False
-            st.session_state["show_cooldown_warning"] = False
 
-        # Luôn render nút, chỉ khác disabled
         if st.button("📨 Gửi yêu cầu", disabled=st.session_state["leave_btn_disabled"]):
             if st.session_state["leave_btn_disabled"]:
-                # Nếu đang cooldown → hiện flash warning
-                st.session_state["show_cooldown_warning"] = True
+                st.warning(
+                    f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
             elif not reason_text.strip():
                 st.warning("⚠️ Vui lòng nhập lý do nghỉ")
             else:
-                # Khóa button và ghi timestamp
                 st.session_state["leave_btn_disabled"] = True
                 st.session_state["last_leave_request"] = now_ts
-
-                # Gửi yêu cầu
                 send_leave_request(
                     st.session_state["username"],
                     start_date,
@@ -167,28 +158,14 @@ else:
                     leave_type,
                     leave_case
                 )
-
-        # Flash warning trong 1.5s nếu spam bấm
-        if st.session_state["show_cooldown_warning"]:
-            placeholder = st.empty()
-            placeholder.info(
-                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo."
-            )
-            time.sleep(1.5)
-            placeholder.empty()
-            st.session_state["show_cooldown_warning"] = False
-
-            # Fix nhanh bug UI
-        st.markdown("<br>"*15, unsafe_allow_html=True)
+        st.markdown("<br>"*10, unsafe_allow_html=True)
 
     # --- Tab quản lý admin ---
-    if tab2 is not None:
+    if tab2:
         with tab2:
             st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown(
-                "<h2 style='text-align: center;'> 🪪 Quản lý yêu cầu nghỉ 🪪</h2>",
-                unsafe_allow_html=True
-            )
+                "<h2 style='text-align: center;'> 🪪 Quản lý yêu cầu nghỉ 🪪</h2>", unsafe_allow_html=True)
             st.markdown("<br><br>", unsafe_allow_html=True)
 
             all_leaves = sorted(
@@ -202,40 +179,17 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                st.markdown('<div class="scrollable-table">',
-                            unsafe_allow_html=True)
-
-                # Header
-                header_col1, header_col2, header_col3, header_col4, header_col5 = st.columns([
-                                                                                             2, 3, 2, 2, 2])
-                header_col1.write("👤 Nhân viên")
-                header_col2.write("📅 Thời gian")
-                header_col3.write("♾️ Loại nghỉ")
-                header_col4.write("📌 Trạng thái")
-                header_col5.write("📝 Thao tác")
-
-                st.markdown("---")
-
-                # Rows
                 for leave in all_leaves:
-                    start = leave.get("start_date", "")
-                    end = leave.get("end_date", "")
-                    duration = leave.get("duration", "")
-                    leave_type = leave.get("leave_type", "")
-                    leave_case = leave.get("leave_case", "")
-                    approved_by = leave.get("approved_by", "Chưa duyệt")
-                    approved_at = leave.get("approved_at", "")
-                    reason = leave.get("reason", "")
-                    status = leave.get("status", "pending")
-
                     col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 2, 2])
                     col1.write(leave.get("username", ""))
-                    col2.write(f"{start} → {end} ({duration} ngày)")
-                    col3.write(f"{leave_type} / {leave_case}")
-                    col4.write(status_badge(status))
+                    col2.write(
+                        f"{leave.get('start_date','')} → {leave.get('end_date','')} ({leave.get('duration','')} ngày)")
+                    col3.write(
+                        f"{leave.get('leave_type','')} / {leave.get('leave_case','')}")
+                    col4.write(status_badge(leave.get("status", "pending")))
 
                     with col5:
-                        if status == "pending":
+                        if leave.get("status", "pending") == "pending":
                             btn_col1, btn_col2 = st.columns([1, 1])
                             with btn_col1:
                                 st.button(
@@ -252,60 +206,37 @@ else:
                                         l_id, u)
                                 )
                         else:
-                            col5.write(f"✅ {approved_by} lúc {approved_at}")
+                            col5.write(
+                                f"✅ {leave.get('approved_by','')} lúc {leave.get('approved_at','')}")
 
-                    # Thêm lý do bên dưới
-                    st.caption(f"📝 {reason}")
-
+                    st.caption(f"📝 {leave.get('reason','')}")
                     st.markdown("---")
-
-                st.markdown("<br><br>", unsafe_allow_html=True)
-
-            st.markdown('</div>', unsafe_allow_html=True)
 
     # --- Tab lịch sử ---
     with tab3:
         st.subheader("📜 Lịch sử yêu cầu đã xin")
-        # Lấy danh sách yêu cầu của user, sort theo start_date giảm dần
-        scroll_style = """
-            <style>
-                .scrollable {
-                    max-height: 400px;
-                    overflow-y: auto;
-                }
-            </style>
-        """
-        st.markdown(scroll_style, unsafe_allow_html=True)
-
-        with st.container():
-            st.markdown('<div class="scrollable">', unsafe_allow_html=True)
-
-            user_leaves = sorted(
-                view_leaves(st.session_state["username"]),
-                key=lambda x: datetime.strptime(
-                    x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"),
-                reverse=True
-            )
+        user_leaves = sorted(
+            view_leaves(st.session_state["username"]),
+            key=lambda x: datetime.strptime(
+                x.get("requested_at", "1900-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"),
+            reverse=True
+        )
         if not user_leaves:
             st.info("Bạn chưa có yêu cầu nghỉ nào.")
         else:
             for leave in user_leaves:
-                start = leave.get("start_date", "")
-                end = leave.get("end_date", "")
-                duration = leave.get("duration", "")
-                leave_type = leave.get("leave_type", "")
-                leave_case = leave.get("leave_case", "")
-                approved_by = leave.get("approved_by", "Chưa duyệt")
-                approved_at = leave.get("approved_at", "")
-
                 col1, col2, col3, col4 = st.columns([1, 1, 2, 4])
-                col1.write(f"📅 {start} → {end} ({duration} ngày)")
-                col2.write(f"📝 {leave_type} / {leave_case}")
-                col3.write(f"♾️Trạng thái: {status_badge(leave['status'])}")
+                col1.write(
+                    f"📅 {leave.get('start_date','')} → {leave.get('end_date','')} ({leave.get('duration','')} ngày)")
+                col2.write(
+                    f"📝 {leave.get('leave_type','')} / {leave.get('leave_case','')}")
+                col3.write(
+                    f"♾️Trạng thái: {status_badge(leave.get('status','pending'))}")
+                approved_by = leave.get("approved_by", "")
                 col4.write(
-                    f"✅ Duyệt bởi: {approved_by}" if approved_by != "Chưa duyệt" else "")
-
-                st.write(f"📝 Lý do: {leave['reason']}")
+                    f"✅ Duyệt bởi: {approved_by}" if approved_by else "")
+                st.write(f"📝 Lý do: {leave.get('reason','')}")
+                approved_at = leave.get("approved_at", "")
                 if approved_at:
                     st.write(f"🕒 Duyệt lúc: {approved_at}")
                 st.markdown("---")
