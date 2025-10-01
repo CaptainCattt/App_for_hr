@@ -236,7 +236,7 @@ else:
                             )
 
                         if leave.get("status") == "pending":
-                            btn_col1, btn_col2 = st.columns([4, 1])
+                            btn_col1, btn_col2 = st.columns(2)
                             with btn_col1:
                                 st.button(
                                     "✅ Duyệt", key=f"approve_{leave['_id']}",
