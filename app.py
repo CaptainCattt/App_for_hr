@@ -187,6 +187,20 @@ else:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
 
+            # CSS để scroll
+            scroll_style = """
+                <style>
+                    .scrollable-table {
+                        max-height: 500px;
+                        overflow-y: auto;
+                        padding-right: 10px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                    }
+                </style>
+            """
+            st.markdown(scroll_style, unsafe_allow_html=True)
+
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
@@ -198,8 +212,21 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                # Chuẩn hóa data cho bảng
-                table_data = []
+                st.markdown('<div class="scrollable-table">',
+                            unsafe_allow_html=True)
+
+                # Header
+                header_col1, header_col2, header_col3, header_col4, header_col5 = st.columns([
+                                                                                             2, 3, 2, 2, 2])
+                header_col1.write("👤 Nhân viên")
+                header_col2.write("📅 Thời gian")
+                header_col3.write("🗂 Loại nghỉ")
+                header_col4.write("📌 Trạng thái")
+                header_col5.write("📝 Thao tác")
+
+                st.markdown("---")
+
+                # Rows
                 for leave in all_leaves:
                     start = leave.get("start_date", "")
                     end = leave.get("end_date", "")
@@ -211,19 +238,38 @@ else:
                     reason = leave.get("reason", "")
                     status = leave.get("status", "pending")
 
-                    table_data.append({
-                        "👤 Nhân viên": leave.get("username", ""),
-                        "📅 Thời gian": f"{start} → {end} ({duration} ngày)",
-                        "🗂 Loại nghỉ": f"{leave_type} / {leave_case}",
-                        "📝 Lý do": reason,
-                        "📌 Trạng thái": status_badge(status),
-                        "✅ Người duyệt": f"{approved_by} {approved_at}"
-                    })
+                    col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 2, 2])
+                    col1.write(leave.get("username", ""))
+                    col2.write(f"{start} → {end} ({duration} ngày)")
+                    col3.write(f"{leave_type} / {leave_case}")
+                    col4.write(status_badge(status))
 
-                df = pd.DataFrame(table_data)
+                    with col5:
+                        if status == "pending":
+                            btn_col1, btn_col2 = st.columns([1, 1])
+                            with btn_col1:
+                                st.button(
+                                    "✅ Duyệt",
+                                    key=f"approve_{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(
+                                        l_id, u)
+                                )
+                            with btn_col2:
+                                st.button(
+                                    "❌ Từ chối",
+                                    key=f"reject_{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
+                                        l_id, u)
+                                )
+                        else:
+                            col5.write(f"✅ {approved_by} lúc {approved_at}")
 
-                # Hiển thị dạng bảng có scroll
-                st.dataframe(df, use_container_width=True, height=500)
+                    # Thêm lý do bên dưới
+                    st.caption(f"📝 {reason}")
+
+                    st.markdown("---")
+
+                st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
 
