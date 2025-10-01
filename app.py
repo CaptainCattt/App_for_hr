@@ -156,8 +156,24 @@ else:
     if tab2 is not None:
         with tab2:
             st.subheader("📊 Quản lý yêu cầu nghỉ")
+
+            # CSS để scroll
+            scroll_style = """
+                <style>
+                    .scrollable {
+                        max-height: 500px;
+                        overflow-y: auto;
+                        padding-right: 10px;
+                    }
+                </style>
+            """
+            st.markdown(scroll_style, unsafe_allow_html=True)
+
+            st.markdown('<div class="scrollable">', unsafe_allow_html=True)
+
             all_leaves = sorted(view_leaves(), key=lambda x: x.get(
                 "start_date", "1900-01-01"), reverse=True)
+
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
@@ -182,16 +198,25 @@ else:
                         st.write(f"📝 Lý do: {leave.get('reason','')}")
                         if leave.get('status') != "pending":
                             st.write(
-                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}")
+                                f"✅ Duyệt bởi: {approved_by} lúc {approved_at}"
+                            )
 
                         if leave.get("status") == "pending":
                             btn_col1, btn_col2 = st.columns([4, 1])
                             with btn_col1:
                                 st.button(
-                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(l_id, u))
+                                    "✅ Duyệt", key=f"approve_{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: approve_leave(
+                                        l_id, u)
+                                )
                             with btn_col2:
                                 st.button(
-                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(l_id, u))
+                                    "❌ Từ chối", key=f"reject_{leave['_id']}",
+                                    on_click=lambda l_id=leave["_id"], u=leave["username"]: reject_leave(
+                                        l_id, u)
+                                )
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # --- Tab lịch sử ---
     with tab3:
