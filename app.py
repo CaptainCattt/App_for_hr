@@ -115,6 +115,7 @@ else:
         reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
         # --- Quản lý cooldown gửi yêu cầu ---
+        # --- Khởi tạo khóa button nếu chưa có ---
         if "leave_btn_disabled" not in st.session_state:
             st.session_state["leave_btn_disabled"] = False
 
@@ -127,7 +128,12 @@ else:
         if remaining <= 0:
             st.session_state["leave_btn_disabled"] = False
 
-        # Button gửi yêu cầu
+        # Hiển thị thông báo cooldown trước khi button
+        if st.session_state["leave_btn_disabled"]:
+            st.info(
+                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+
+        # Button gửi yêu cầu, disable nếu đang cooldown
         if st.button("📨 Gửi yêu cầu", disabled=st.session_state["leave_btn_disabled"]):
             if not reason_text.strip():
                 st.warning("⚠️ Vui lòng nhập lý do nghỉ")
@@ -145,12 +151,9 @@ else:
                 # Cập nhật timestamp và khóa button
                 st.session_state["last_leave_request"] = now_ts
                 st.session_state["leave_btn_disabled"] = True
-                st.success("📤 Yêu cầu nghỉ đã được gửi!")
 
-        # Hiển thị thông báo nếu đang cooldown
-        if st.session_state["leave_btn_disabled"]:
-            st.info(
-                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+                # Thông báo thành công
+                st.success("📤 Yêu cầu nghỉ đã được gửi!")
 
         # Fix nhanh bug UI
         st.markdown("<br>"*15, unsafe_allow_html=True)

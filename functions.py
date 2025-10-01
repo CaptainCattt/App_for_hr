@@ -72,6 +72,18 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
 
 
 def approve_leave(l_id, user_name):
+    # Khởi tạo khóa nút nếu chưa có
+    if "approve_locked" not in st.session_state:
+        st.session_state["approve_locked"] = {}
+
+    # Nếu nút đã bị lock thì return ngay
+    if st.session_state["approve_locked"].get(str(l_id), False):
+        st.warning("⚠️ Yêu cầu này đang được xử lý, vui lòng đợi...")
+        return
+
+    # Lock nút ngay khi nhấn
+    st.session_state["approve_locked"][str(l_id)] = True
+
     placeholder = st.empty()
     placeholder.info("✅ Đang duyệt...")
 
@@ -92,9 +104,9 @@ def approve_leave(l_id, user_name):
         USERS_COL.update_one({"username": user_name}, {
                              "$inc": {"remaining_days": -duration}})
 
-    # Hiển thị thông báo thành công
     placeholder.success(
-        f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
+        f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!"
+    )
 
 
 def reject_leave(l_id, user_name):
