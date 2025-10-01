@@ -138,10 +138,7 @@ else:
                 time.sleep(3)
                 warning_placeholder.empty()
             else:
-                placeholder = st.empty()
-                with placeholder:
-                    st.info("📨 Đang gửi yêu cầu...")
-                time.sleep(0.5)
+
                 send_leave_request(
                     st.session_state["username"],
                     start_date,
@@ -151,10 +148,6 @@ else:
                     leave_type,
                     leave_case
                 )
-                placeholder.success("📤 Yêu cầu nghỉ đã được gửi!")
-                st.session_state["last_leave_request"] = now_ts
-                time.sleep(3)
-                placeholder.empty()
 
         # Fix nhanh bug UI
         st.markdown("<br>"*15, unsafe_allow_html=True)
