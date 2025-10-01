@@ -11,29 +11,21 @@ import uuid
 
 def get_current_user():
     """
-    Trả về user từ cookie/session token nếu hợp lệ.
-    Đồng thời ghi lại thông tin vào st.session_state để UI sử dụng.
+    Đọc session active duy nhất trong DB
     """
-    token = COOKIES.get("session_token")
-    if not token:
-        return None
-
-    session = SESSIONS_COL.find_one({"token": token})
+    session = SESSIONS_COL.find_one({"_id": "current_session"})
     if not session:
         return None
 
-    # Nếu expired => xóa session + cookie
+    # check expire
     if session.get("expired_at") and session["expired_at"] < datetime.now():
-        SESSIONS_COL.delete_one({"token": token})
-        COOKIES["session_token"] = ""
-        COOKIES.save()
+        SESSIONS_COL.delete_one({"_id": "current_session"})
         return None
 
-    # Ghi vào session_state (giúp UI không yêu cầu đăng nhập lại sau reload)
+    # fill session_state
     st.session_state["username"] = session["username"]
     st.session_state["role"] = session.get("role", "employee")
 
-    # Điền thêm thông tin từ users collection nếu có
     user = USERS_COL.find_one({"username": session["username"]})
     if user:
         st.session_state["full_name"] = user.get("full_name", user["username"])
@@ -45,8 +37,7 @@ def get_current_user():
 
 def do_login(username, password):
     """
-    Kiểm tra user/password, tạo session token, lưu cookie.
-    Gọi do_login bằng partial từ app khi bấm nút Login.
+    Login ghi đè session global
     """
     placeholder = st.empty()
     with placeholder:
@@ -60,22 +51,20 @@ def do_login(username, password):
         placeholder.empty()
         return
 
-    # tạo token & session
-    token = str(uuid.uuid4())
+    # ghi session mới, xóa cũ
     expired_at = datetime.now() + timedelta(hours=8)
+    SESSIONS_COL.replace_one(
+        {"_id": "current_session"},
+        {
+            "_id": "current_session",
+            "username": user["username"],
+            "role": user.get("role", "employee"),
+            "expired_at": expired_at
+        },
+        upsert=True
+    )
 
-    SESSIONS_COL.insert_one({
-        "username": user["username"],
-        "role": user.get("role", "employee"),
-        "token": token,
-        "expired_at": expired_at
-    })
-
-    # lưu cookie token (riêng cho trình duyệt)
-    COOKIES["session_token"] = token
-    COOKIES.save()
-
-    # lưu session_state để UI dùng
+    # cập nhật session_state
     st.session_state["username"] = user["username"]
     st.session_state["role"] = user.get("role", "employee")
     st.session_state["full_name"] = user.get("full_name", user["username"])
@@ -87,8 +76,22 @@ def do_login(username, password):
         f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
     time.sleep(1.2)
     placeholder.empty()
+    st.session_state["rerun_needed"] = True
 
-    # yêu cầu app rerun để cập nhật UI
+
+def logout():
+    placeholder = st.empty()
+    with placeholder:
+        st.info("🚪 Đang đăng xuất...")
+    time.sleep(0.4)
+
+    # clear session global
+    SESSIONS_COL.delete_one({"_id": "current_session"})
+    st.session_state.clear()
+
+    placeholder.success("✅ Bạn đã đăng xuất!")
+    time.sleep(1.2)
+    placeholder.empty()
     st.session_state["rerun_needed"] = True
 
 
