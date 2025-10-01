@@ -138,7 +138,6 @@ else:
                     leave_case
                 )
                 st.session_state["last_leave_request"] = now_ts
-                st.success("📤 Yêu cầu nghỉ đã được gửi!")
 
         # Fix nhanh bug UI
         st.markdown("<br>"*15, unsafe_allow_html=True)
