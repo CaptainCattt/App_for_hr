@@ -65,13 +65,13 @@ def get_current_user():
 
 
 def do_login(username, password):
-    """Đăng nhập user, tạo JWT và lưu vào cookie cho client hiện tại"""
+    """Đăng nhập user, tạo JWT và lưu vào cookie mà không thay đổi DB nếu user đã tồn tại"""
     placeholder = st.empty()
     with placeholder:
         st.info("🔑 Đang đăng nhập...")
     time.sleep(0.4)
 
-    # --- Kiểm tra user ---
+    # Kiểm tra user trong DB
     user = USERS_COL.find_one({"username": username})
     if not user:
         # Nếu chưa có user, tạo mới
@@ -87,16 +87,17 @@ def do_login(username, password):
         })
         user = USERS_COL.find_one({"username": username})
     else:
+        # Nếu có user, chỉ kiểm tra password
         if user.get("password") != password:
             placeholder.error("❌ Sai username hoặc password")
             time.sleep(1.2)
             placeholder.empty()
             return False
 
-    # --- Tạo JWT riêng cho client này ---
+    # --- Tạo JWT mới ---
     token, exp, session_id = create_jwt_for_user(user)
 
-    # Lưu token vào cookie client hiện tại (không xóa các token cũ của user khác)
+    # --- Lưu cookie cho client hiện tại ---
     COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
 
@@ -108,8 +109,6 @@ def do_login(username, password):
         "position": user.get("position", ""),
         "department": user.get("department", ""),
         "remaining_days": user.get("remaining_days", 0),
-        "session_id": session_id,
-        "jwt_token": token,
         "rerun_needed": True
     })
 
