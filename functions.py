@@ -1,43 +1,100 @@
 # functions.py
-from settings import USERS_COL, LEAVES_COL, SESSIONS_COL, COOKIES, STATUS_COLORS
-from bson import ObjectId
-from datetime import datetime, timedelta
 import streamlit as st
+from datetime import datetime, timedelta
+from bson import ObjectId
 import time
+import jwt
 import uuid
 
-# ---------- Auth / session helpers ----------
+from settings import USERS_COL, LEAVES_COL, SESSIONS_COL, COOKIES, STATUS_COLORS, JWT_SECRET
+
+# ---------------------------
+# Authentication & sessions
+# ---------------------------
+
+JWT_ALGO = "HS256"
+SESSION_COOKIE_KEY = "session_token"
+SESSION_DURATION_HOURS = 8  # token/session lifetime
+
+
+def create_jwt_for_user(user):
+    exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
+    payload = {
+        "sub": str(user.get("_id", "")),
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "exp": exp
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
+    return token, exp
+
+
+def save_session(token, username, role, expired_at, meta=None):
+    doc = {
+        "token": token,
+        "username": username,
+        "role": role,
+        "expired_at": expired_at,
+        "meta": meta or {},
+        "created_at": datetime.utcnow()
+    }
+    SESSIONS_COL.insert_one(doc)
+    return doc
+
+
+def verify_jwt(token):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
 
 
 def get_current_user():
     """
-    Đọc session active duy nhất trong DB
+    Try to load user from cookie token -> validate -> return dict or None.
+    Also populate st.session_state fields on success.
     """
-    session = SESSIONS_COL.find_one({"_id": "current_session"})
-    if not session:
+    token = COOKIES.get(SESSION_COOKIE_KEY)
+    if not token:
         return None
 
-    # check expire
-    if session.get("expired_at") and session["expired_at"] < datetime.now():
-        SESSIONS_COL.delete_one({"_id": "current_session"})
+    # Check DB session exists and not expired
+    session_doc = SESSIONS_COL.find_one({"token": token})
+    if not session_doc:
+        # remove cookie
+        COOKIES[SESSION_COOKIE_KEY] = ""
+        COOKIES.save()
         return None
 
-    # fill session_state
-    st.session_state["username"] = session["username"]
-    st.session_state["role"] = session.get("role", "employee")
+    # token should be valid (signature + exp)
+    payload = verify_jwt(token)
+    if not payload:
+        # invalid or expired: remove session row and cookie
+        SESSIONS_COL.delete_one({"token": token})
+        COOKIES[SESSION_COOKIE_KEY] = ""
+        COOKIES.save()
+        return None
 
-    user = USERS_COL.find_one({"username": session["username"]})
+    # session ok -> populate session_state (usefull after reload)
+    st.session_state["username"] = payload.get("username")
+    st.session_state["role"] = payload.get("role", "employee")
+
+    # load extra user profile info
+    user = USERS_COL.find_one({"username": payload.get("username")})
     if user:
         st.session_state["full_name"] = user.get("full_name", user["username"])
         st.session_state["position"] = user.get("position", "")
         st.session_state["department"] = user.get("department", "")
         st.session_state["remaining_days"] = user.get("remaining_days", 0)
-    return {"username": session["username"], "role": session.get("role", "employee")}
+    return {"username": payload.get("username"), "role": payload.get("role")}
 
 
 def do_login(username, password):
     """
-    Login ghi đè session global
+    Authenticate user, create JWT and session record, set cookie.
     """
     placeholder = st.empty()
     with placeholder:
@@ -47,24 +104,19 @@ def do_login(username, password):
     user = USERS_COL.find_one({"username": username, "password": password})
     if not user:
         placeholder.error("❌ Sai username hoặc password")
-        time.sleep(1.5)
+        time.sleep(1.2)
         placeholder.empty()
-        return
+        return False
 
-    # ghi session mới, xóa cũ
-    expired_at = datetime.now() + timedelta(hours=8)
-    SESSIONS_COL.replace_one(
-        {"_id": "current_session"},
-        {
-            "_id": "current_session",
-            "username": user["username"],
-            "role": user.get("role", "employee"),
-            "expired_at": expired_at
-        },
-        upsert=True
-    )
+    token, exp = create_jwt_for_user(user)
+    # Save session doc
+    save_session(token, user["username"], user.get("role", "employee"), exp)
 
-    # cập nhật session_state
+    # Set cookie
+    COOKIES[SESSION_COOKIE_KEY] = token
+    COOKIES.save()
+
+    # populate session_state
     st.session_state["username"] = user["username"]
     st.session_state["role"] = user.get("role", "employee")
     st.session_state["full_name"] = user.get("full_name", user["username"])
@@ -74,9 +126,11 @@ def do_login(username, password):
 
     placeholder.success(
         f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
-    time.sleep(1.2)
+    time.sleep(1)
     placeholder.empty()
+    # ask app to rerun to refresh UI
     st.session_state["rerun_needed"] = True
+    return True
 
 
 def logout():
@@ -85,50 +139,37 @@ def logout():
         st.info("🚪 Đang đăng xuất...")
     time.sleep(0.4)
 
-    # clear session global
-    SESSIONS_COL.delete_one({"_id": "current_session"})
-    st.session_state.clear()
-
-    placeholder.success("✅ Bạn đã đăng xuất!")
-    time.sleep(1.2)
-    placeholder.empty()
-    st.session_state["rerun_needed"] = True
-
-
-def logout():
-    placeholder = st.empty()
-    with placeholder:
-        st.info("🚪 Đang đăng xuất...")
-    time.sleep(0.4)
-
-    token = COOKIES.get("session_token")
+    # delete session from DB if exists
+    token = COOKIES.get(SESSION_COOKIE_KEY)
     if token:
         SESSIONS_COL.delete_one({"token": token})
 
-    # clear local state & cookie
-    st.session_state.clear()
-    COOKIES["session_token"] = ""
+    # clear cookie and st.session_state
+    COOKIES[SESSION_COOKIE_KEY] = ""
     COOKIES.save()
 
+    # clear only keys we used (do not clear all arbitrary state if other data needed)
+    keys_to_clear = ["username", "role", "full_name",
+                     "position", "department", "remaining_days"]
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+
     placeholder.success("✅ Bạn đã đăng xuất thành công!")
-    time.sleep(1.2)
+    time.sleep(0.8)
     placeholder.empty()
     st.session_state["rerun_needed"] = True
 
-
-# ---------- Leave related ----------
-
-def status_badge(status: str):
-    return STATUS_COLORS.get(status, status)
+# ---------------------------
+# Leave-related functions
+# ---------------------------
 
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
-    # ensure date string
     if not isinstance(start_date, str):
         start_date = start_date.strftime("%Y-%m-%d")
     if not isinstance(end_date, str):
         end_date = end_date.strftime("%Y-%m-%d")
-
     LEAVES_COL.insert_one({
         "username": username,
         "start_date": start_date,
@@ -138,7 +179,7 @@ def request_leave(username, start_date, end_date, duration, reason, leave_type, 
         "leave_type": leave_type,
         "leave_case": leave_case,
         "status": "pending",
-        "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "requested_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "approved_by": None,
         "approved_at": None
     })
@@ -150,56 +191,60 @@ def view_leaves(username=None):
     return list(LEAVES_COL.find())
 
 
+def update_leave_status(leave_id, new_status):
+    LEAVES_COL.update_one({"_id": ObjectId(leave_id)}, {
+                          "$set": {"status": new_status}})
+
+
+def status_badge(status: str):
+    return STATUS_COLORS.get(status, status)
+
+
 def send_leave_request(username, start_date, end_date, duration, reason, leave_type, leave_case):
-    """
-    Gọi khi user bấm gửi. Khóa nút ngay lập tức bằng session_state trước khi insert.
-    """
-    st.session_state["leave_btn_disabled"] = True
-    st.session_state["last_leave_request"] = time.time()
+    # Called from UI; block double clicks by setting state in UI before calling this function.
+    # Normalize dates
+    start_str = start_date.strftime(
+        "%Y-%m-%d") if not isinstance(start_date, str) else start_date
+    end_str = end_date.strftime(
+        "%Y-%m-%d") if not isinstance(end_date, str) else end_date
 
-    # Insert trực tiếp (không sleep lớn)
-    request_leave(username, start_date, end_date,
-                  duration, reason, leave_type, leave_case)
-
-    # hiển thị success flash ngắn
-    placeholder = st.empty()
-    placeholder.success("📤 Yêu cầu đã gửi!")
-    time.sleep(1.5)
-    placeholder.empty()
-    # cho UI cập nhật (không bắt buộc)
-    st.session_state["rerun_needed"] = True
+    LEAVES_COL.insert_one({
+        "username": username,
+        "start_date": start_str,
+        "end_date": end_str,
+        "duration": duration,
+        "reason": reason,
+        "leave_type": leave_type,
+        "leave_case": leave_case,
+        "status": "pending",
+        "requested_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "approved_by": None,
+        "approved_at": None
+    })
+    st.success(
+        f"📤 Yêu cầu '{leave_case}' từ {start_str} đến {end_str} ({duration} ngày) đã gửi!")
 
 
 def approve_leave(l_id, user_name):
-    """
-    Approve: cập nhật status + approved_by/approved_at + trừ remaining_days nếu phù hợp.
-    Hàm này gọi từ UI của admin. Khóa UI bên app bằng rerun flag + hiển thị flash.
-    """
     placeholder = st.empty()
     with placeholder:
         st.info("✅ Đang duyệt...")
     time.sleep(0.4)
-
     leave = LEAVES_COL.find_one({"_id": ObjectId(l_id)})
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     LEAVES_COL.update_one({"_id": ObjectId(l_id)}, {"$set": {
         "status": "approved",
         "approved_by": st.session_state.get("full_name", "Admin"),
         "approved_at": now_str
     }})
-
-    if leave and leave.get("leave_type") == "Nghỉ phép năm":
+    if leave.get("leave_type") == "Nghỉ phép năm":
         duration = float(leave.get("duration", 1))
         USERS_COL.update_one({"username": user_name}, {
                              "$inc": {"remaining_days": -duration}})
-
     placeholder.success(
         f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
-    time.sleep(1.2)
+    time.sleep(1)
     placeholder.empty()
-    # set message to show on next render
-    st.session_state["leave_message"] = f"Yêu cầu của {user_name} đã được duyệt."
     st.session_state["rerun_needed"] = True
 
 
@@ -208,17 +253,14 @@ def reject_leave(l_id, user_name):
     with placeholder:
         st.info("❌ Đang từ chối...")
     time.sleep(0.4)
-
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     LEAVES_COL.update_one({"_id": ObjectId(l_id)}, {"$set": {
         "status": "rejected",
         "approved_by": st.session_state.get("full_name", "Admin"),
         "approved_at": now_str
     }})
-
     placeholder.error(
         f"❌ Yêu cầu của {user_name} đã bị từ chối lúc {now_str}!")
-    time.sleep(1.2)
+    time.sleep(1)
     placeholder.empty()
-    st.session_state["leave_message"] = f"Yêu cầu của {user_name} đã bị từ chối."
     st.session_state["rerun_needed"] = True

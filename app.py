@@ -13,7 +13,7 @@ st.set_page_config(page_title="Request for Time Off", layout="wide")
 # Header
 st.markdown(
     """
-    <div style='top: 30px; left: 40px; z-index: 1000;'>
+    <div style='position: relative; top: 10px; left: 20px; z-index: 1000;'>
         <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='180'/>
     </div>
     <h1 style='text-align: center;'> 🏢 Request for Leave Office 🏢</h1>""",
@@ -22,7 +22,8 @@ st.markdown(
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 # --- Try restore session from cookie/token ---
-get_current_user()  # will populate st.session_state if a valid cookie exists
+# get_current_user() will populate st.session_state when a valid cookie/token exists
+get_current_user()
 
 # --- rerun needed flag handling (pattern) ---
 if "rerun_needed" not in st.session_state:
@@ -35,7 +36,7 @@ if st.session_state.get("rerun_needed"):
     except Exception:
         pass
 
-# --- defaults ---
+# --- defaults (ensure keys exist) ---
 for key, default in {
     "username": "",
     "full_name": "",
@@ -50,11 +51,11 @@ for key, default in {
 
 # show any leave_message (set by approve/reject)
 if st.session_state.get("leave_message"):
-    fl = st.empty()
-    fl.info(st.session_state["leave_message"])
-    # auto hide quickly
+    ph = st.empty()
+    ph.info(st.session_state["leave_message"])
+    # auto-hide quickly (short pause)
     time.sleep(1.5)
-    fl.empty()
+    ph.empty()
     st.session_state["leave_message"] = ""
 
 # --- Login UI ---
@@ -64,11 +65,9 @@ if not st.session_state.get("username"):
     password = st.text_input(
         "🔑 Password", type="password", key="login_password")
 
-    st.button(
-        "🚀 Login",
-        on_click=partial(do_login, st.session_state.get(
-            "login_username", ""), st.session_state.get("login_password", ""))
-    )
+    # Use on_click + args so current username/password values are passed at click time
+    if st.button("🚀 Login"):
+        do_login(username.strip(), password.strip())
 
 else:
     # Sidebar
@@ -119,12 +118,12 @@ else:
         duration = col1.number_input(
             "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0)
         start_date = col2.date_input("Ngày bắt đầu nghỉ", value=date.today())
-        end_date_default = start_date + timedelta(days=int(duration)-1)
+        end_date_default = start_date + timedelta(days=int(duration) - 1)
         end_date = col3.date_input(
             "Ngày kết thúc nghỉ", value=end_date_default)
         reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
-        # cooldown control
+        # cooldown control / anti-spam
         cooldown = 60  # seconds
         if "last_leave_request" not in st.session_state:
             st.session_state["last_leave_request"] = 0
@@ -142,28 +141,38 @@ else:
             st.session_state["leave_btn_disabled"] = False
             st.session_state["show_cooldown_warning"] = False
 
+        # Render button always but disabled when in cooldown
         if st.button("📨 Gửi yêu cầu", disabled=st.session_state["leave_btn_disabled"]):
             if st.session_state["leave_btn_disabled"]:
+                # Show quick flash warning if user spam-clicks when disabled
                 st.session_state["show_cooldown_warning"] = True
             elif not reason_text.strip():
                 st.warning("⚠️ Vui lòng nhập lý do nghỉ")
             else:
-                # lock button then send
+                # Lock immediately and store timestamp to avoid double submit
                 st.session_state["leave_btn_disabled"] = True
                 st.session_state["last_leave_request"] = time.time()
+                # Send (DB insert) — send_leave_request will NOT call sleep/block UI long
                 send_leave_request(
-                    st.session_state["username"], start_date, end_date, duration, reason_text, leave_type, leave_case)
+                    st.session_state["username"],
+                    start_date,
+                    end_date,
+                    duration,
+                    reason_text,
+                    leave_type,
+                    leave_case
+                )
 
-        # flash warn if spam click
+        # flash warning in-place (short)
         if st.session_state["show_cooldown_warning"]:
-            ph = st.empty()
-            ph.info(
+            tmp = st.empty()
+            tmp.info(
                 f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
             time.sleep(1.5)
-            ph.empty()
+            tmp.empty()
             st.session_state["show_cooldown_warning"] = False
 
-        st.markdown("<br>"*8, unsafe_allow_html=True)
+        st.markdown("<br>" * 8, unsafe_allow_html=True)
 
     # --- Admin manage tab ---
     if tab2 is not None:
@@ -173,7 +182,7 @@ else:
                 "<h2 style='text-align:center'>📊 Quản lý yêu cầu nghỉ</h2>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # sort by requested_at field (newest first)
+            # sort by requested_at (newest first)
             all_leaves = sorted(
                 view_leaves(),
                 key=lambda x: datetime.strptime(
@@ -184,7 +193,7 @@ else:
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
             else:
-                # table-like header
+                # header
                 header_col1, header_col2, header_col3, header_col4, header_col5 = st.columns([
                                                                                              2, 3, 2, 2, 2])
                 header_col1.write("👤 Nhân viên")
@@ -205,23 +214,28 @@ else:
                     reason = leave.get("reason", "")
                     status = leave.get("status", "pending")
 
-                    col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 2, 2])
-                    col1.write(leave.get("username", ""))
-                    col2.write(f"{start} → {end} ({duration} ngày)")
-                    col3.write(f"{leave_type} / {leave_case}")
-                    col4.write(status_badge(status))
+                    c1, c2, c3, c4, c5 = st.columns([2, 3, 2, 2, 2])
+                    c1.write(leave.get("username", ""))
+                    c2.write(f"{start} → {end} ({duration} ngày)")
+                    c3.write(f"{leave_type} / {leave_case}")
+                    c4.write(status_badge(status))
 
-                    with col5:
+                    with c5:
                         if status == "pending":
-                            c1, c2 = st.columns([1, 1])
-                            with c1:
-                                st.button("✅ Duyệt", key=f"approve_{leave['_id']}", on_click=partial(
-                                    approve_leave, leave["_id"], leave["username"]))
-                            with c2:
-                                st.button("❌ Từ chối", key=f"reject_{leave['_id']}", on_click=partial(
-                                    reject_leave, leave["_id"], leave["username"]))
+                            # use partial to bind id/username now
+                            approve_cb = partial(
+                                approve_leave, leave["_id"], leave["username"])
+                            reject_cb = partial(
+                                reject_leave, leave["_id"], leave["username"])
+                            colA, colB = st.columns([1, 1])
+                            with colA:
+                                st.button(
+                                    "✅ Duyệt", key=f"approve_{leave['_id']}", on_click=approve_cb)
+                            with colB:
+                                st.button(
+                                    "❌ Từ chối", key=f"reject_{leave['_id']}", on_click=reject_cb)
                         else:
-                            col5.write(f"✅ {approved_by} lúc {approved_at}")
+                            c5.write(f"✅ {approved_by} lúc {approved_at}")
 
                     st.caption(f"📝 {reason}")
                     st.markdown("---")
@@ -248,11 +262,11 @@ else:
                 approved_at = leave.get("approved_at", "")
                 status = leave.get("status", "pending")
 
-                c1, c2, c3, c4 = st.columns([1, 1, 2, 4])
-                c1.write(f"📅 {start} → {end} ({duration} ngày)")
-                c2.write(f"📝 {leave_type} / {leave_case}")
-                c3.write(f"♾️ {status_badge(status)}")
-                c4.write(
+                cc1, cc2, cc3, cc4 = st.columns([1, 1, 2, 4])
+                cc1.write(f"📅 {start} → {end} ({duration} ngày)")
+                cc2.write(f"📝 {leave_type} / {leave_case}")
+                cc3.write(f"♾️ {status_badge(status)}")
+                cc4.write(
                     f"✅ Duyệt bởi: {approved_by}" if approved_by != "Chưa duyệt" else "")
                 st.write(f"📝 Lý do: {leave.get('reason','')}")
                 if approved_at:

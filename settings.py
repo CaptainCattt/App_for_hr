@@ -2,9 +2,10 @@
 import streamlit as st
 from pymongo import MongoClient
 from streamlit_cookies_manager import EncryptedCookieManager
+import os
 
 # --- MongoDB Config ---
-MONGO_URL = st.secrets["MONGO_URL"]  # set this in Streamlit secrets
+MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
 
 client = MongoClient(MONGO_URL)
@@ -13,16 +14,20 @@ db = client[DB_NAME]
 # Collections
 USERS_COL = db["users"]
 LEAVES_COL = db["leaves"]
-SESSIONS_COL = db["sessions"]
+SESSIONS_COL = db["sessions"]   # session per-device
 
 # --- Cookie Config ---
 COOKIES = EncryptedCookieManager(
     prefix="leave_mgmt",
-    password=st.secrets["COOKIE_PASSWORD"],  # set in secrets
+    password=st.secrets["COOKIE_PASSWORD"],
 )
 if not COOKIES.ready():
-    # Stop execution while cookies manager initializes
     st.stop()
+
+# --- JWT secret ---
+# store a strong secret in Streamlit secrets: "JWT_SECRET"
+JWT_SECRET = st.secrets.get("JWT_SECRET", os.environ.get(
+    "JWT_SECRET", "dev_secret_change_me"))
 
 # --- Constants ---
 STATUS_COLORS = {
