@@ -1,4 +1,5 @@
 # settings.py
+import uuid
 import streamlit as st
 from pymongo import MongoClient
 from streamlit_cookies_manager import EncryptedCookieManager
@@ -16,10 +17,9 @@ LEAVES_COL = db["leaves"]
 # Lưu sessions trong mảng "sessions" của user, không dùng collection riêng
 
 # --- Cookie Config ---
+cookie_key = f"leave_mgmt_{str(uuid.uuid4())[:8]}"
 COOKIES = EncryptedCookieManager(
-    prefix="leave_mgmt",
-    password=st.secrets["COOKIE_PASSWORD"],
-)
+    prefix=cookie_key, password=st.secrets["COOKIE_PASSWORD"])
 if not COOKIES.ready():
     st.stop()
 
