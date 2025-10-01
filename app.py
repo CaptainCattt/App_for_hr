@@ -185,8 +185,9 @@ else:
     # --- Tab quản lý admin ---
     if tab2 is not None:
         with tab2:
+            st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown(
-                "<h2 style='text-align: center;'>📊 Quản lý yêu cầu nghỉ</h2>",
+                "<h2 style='text-align: center;'> 🪪 Quản lý yêu cầu nghỉ 🪪</h2>",
                 unsafe_allow_html=True
             )
             st.markdown("<br><br>", unsafe_allow_html=True)
