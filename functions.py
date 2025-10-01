@@ -48,12 +48,9 @@ def status_badge(status: str):
 
 
 def send_leave_request(username, start_date, end_date, duration, reason, leave_type, leave_case):
-    # Khóa button ngay khi bấm
+    # --- Khóa button ngay khi bấm ---
     st.session_state["leave_btn_disabled"] = True
     st.session_state["last_leave_request"] = time.time()
-
-    placeholder = st.empty()
-    placeholder.info("📨 Đang gửi yêu cầu...")
 
     # Chuẩn hóa ngày
     start_str = start_date.strftime(
@@ -77,11 +74,9 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
     })
 
     # Thông báo thành công
-    placeholder.success(
+    st.success(
         f"📤 Yêu cầu '{leave_case}' từ {start_str} đến {end_str} ({duration} ngày) đã gửi!"
     )
-    time.sleep(1.5)
-    placeholder.empty()
 
 
 def approve_leave(l_id, user_name):
