@@ -109,9 +109,20 @@ def reject_leave(l_id, user_name):
     with placeholder:
         st.info("❌ Đang từ chối...")
     time.sleep(0.5)
-    LEAVES_COL.update_one({"_id": ObjectId(l_id)}, {
-                          "$set": {"status": "rejected"}})
-    placeholder.error(f"❌ Yêu cầu của {user_name} đã bị từ chối!")
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    LEAVES_COL.update_one(
+        {"_id": ObjectId(l_id)},
+        {"$set": {
+            "status": "rejected",
+            "approved_by": st.session_state.get("full_name", "Admin"),
+            "approved_at": now_str
+        }}
+    )
+
+    placeholder.error(
+        f"❌ Yêu cầu của {user_name} đã bị từ chối lúc {now_str}!")
     time.sleep(3)
     placeholder.empty()
 
