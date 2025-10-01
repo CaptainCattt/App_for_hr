@@ -1,4 +1,6 @@
 # functions.py
+from settings import SESSIONS_COL, COOKIES
+import uuid
 from bson import ObjectId
 from datetime import datetime, timedelta
 import streamlit as st
@@ -154,29 +156,29 @@ def do_login(username, password):
     placeholder = st.empty()
     user = USERS_COL.find_one({"username": username, "password": password})
     if user:
-        # Tạo session token
-        token = secrets.token_hex(16)
-        expire_time = datetime.now() + timedelta(hours=12)
+        # Sinh token mới
+        token = str(uuid.uuid4())
+        expired_at = datetime.now() + timedelta(hours=8)  # session 8h
 
-        # Lưu session vào MongoDB
+        # Lưu vào collection SESSIONS
         SESSIONS_COL.insert_one({
-            "token": token,
             "username": user["username"],
             "role": user.get("role", "employee"),
-            "expired_at": expire_time
+            "token": token,
+            "expired_at": expired_at
         })
 
-        # Lưu token vào cookie
-        COOKIES["session_token"] = token
-        COOKIES.save()
-
-        # Lưu session_state (chỉ để tiện render UI lần đầu)
+        # Lưu vào session_state
         st.session_state["username"] = user["username"]
         st.session_state["role"] = user.get("role", "employee")
         st.session_state["full_name"] = user.get("full_name", user["username"])
         st.session_state["position"] = user.get("position", "")
         st.session_state["department"] = user.get("department", "")
         st.session_state["remaining_days"] = user.get("remaining_days", 0)
+
+        # Lưu token vào cookies
+        COOKIES["session_token"] = token
+        COOKIES.save()
 
         placeholder.success(
             f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
@@ -185,8 +187,6 @@ def do_login(username, password):
 
     time.sleep(1.5)
     placeholder.empty()
-
-    # Rerun để cập nhật UI
     st.session_state["rerun_needed"] = True
 
 
