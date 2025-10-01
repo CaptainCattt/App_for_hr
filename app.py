@@ -12,7 +12,7 @@ st.set_page_config(page_title="Request for Time Off", layout="wide")
 st.markdown(
     """
     <div style='top: 30px; left: 40px; z-index: 1000;'>
-        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='150'/>
+        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='300'/>
     </div>
     <h1 style='text-align: center;'> 🏢 Hệ thống Quản lý Nghỉ phép 🏢</h1>""",
     unsafe_allow_html=True,
