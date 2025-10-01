@@ -7,7 +7,8 @@ import os
 # --- MongoDB Config ---
 MONGO_URL = st.secrets["MONGO_URL"]
 DB_NAME = "leave_management"
-
+JWT_SECRET = st.secrets.get("JWT_SECRET", os.environ.get(
+    "JWT_SECRET", "dev_secret_change_me"))
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 

@@ -4,58 +4,68 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 import time
 import uuid
+import jwt
+from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS, JWT_SECRET
 
-from settings import USERS_COL, LEAVES_COL, COOKIES, STATUS_COLORS
-
+JWT_ALGO = "HS256"
 SESSION_COOKIE_KEY = "session_token"
+SESSION_DURATION_HOURS = 8  # token lifetime
 
 
-# ---------------------------
-# Authentication (no DB sessions)
-# ---------------------------
+def create_jwt_for_user(user):
+    """Tạo JWT chứa thông tin user + session_id duy nhất"""
+    exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
+    session_id = str(uuid.uuid4())
+    payload = {
+        "sid": session_id,
+        "sub": str(user.get("_id", "")),
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "exp": exp.timestamp()  # lưu timestamp
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
+    return token
 
-def get_current_user():
-    """
-    Lấy thông tin user hiện tại từ st.session_state.
-    Nếu chưa có, kiểm tra cookie để populate session_state.
-    """
-    if "username" in st.session_state and st.session_state["username"]:
-        return {
-            "username": st.session_state["username"],
-            "role": st.session_state.get("role", "employee"),
-            "full_name": st.session_state.get("full_name", st.session_state["username"]),
-            "position": st.session_state.get("position", ""),
-            "department": st.session_state.get("department", ""),
-            "remaining_days": st.session_state.get("remaining_days", 0)
-        }
 
-    # Kiểm tra cookie
-    username = COOKIES.get(SESSION_COOKIE_KEY)
-    if not username:
+def verify_jwt(token):
+    """Decode JWT, trả về payload hoặc None nếu hết hạn/invalid"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
         return None
 
-    user = USERS_COL.find_one({"username": username})
-    if not user:
+
+def get_current_user():
+    """Lấy thông tin user từ cookie + JWT"""
+    token = COOKIES.get(SESSION_COOKIE_KEY)
+    if not token:
+        return None
+    payload = verify_jwt(token)
+    if not payload:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # Populate session_state
-    st.session_state["username"] = user["username"]
-    st.session_state["role"] = user.get("role", "employee")
-    st.session_state["full_name"] = user.get("full_name", user["username"])
-    st.session_state["position"] = user.get("position", "")
-    st.session_state["department"] = user.get("department", "")
-    st.session_state["remaining_days"] = user.get("remaining_days", 0)
-    return get_current_user()
+    user = USERS_COL.find_one({"username": payload.get("username")})
+    if not user:
+        return None
+
+    return {
+        "_id": str(user["_id"]),
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "full_name": user.get("full_name", user["username"]),
+        "position": user.get("position", ""),
+        "department": user.get("department", ""),
+        "remaining_days": user.get("remaining_days", 0)
+    }
 
 
 def do_login(username, password):
-    """
-    Authenticate user.
-    Nếu user chưa có trong DB thì tạo mới.
-    Lưu trực tiếp session vào st.session_state + cookie.
-    """
+    """Đăng nhập user, tạo JWT và lưu vào cookie"""
     placeholder = st.empty()
     with placeholder:
         st.info("🔑 Đang đăng nhập...")
@@ -63,7 +73,7 @@ def do_login(username, password):
 
     user = USERS_COL.find_one({"username": username})
     if not user:
-        # Tạo user mới
+        # Tạo user mới nếu chưa có
         USERS_COL.insert_one({
             "username": username,
             "password": password,
@@ -76,64 +86,49 @@ def do_login(username, password):
         })
         user = USERS_COL.find_one({"username": username})
     else:
-        # Kiểm tra password
         if user.get("password") != password:
             placeholder.error("❌ Sai username hoặc password")
             time.sleep(1.2)
             placeholder.empty()
             return False
 
-    # Tạo session_id cho lần login này
-    session_id = str(uuid.uuid4())
-    st.session_state["session_id"] = session_id
+    # Tạo token JWT
+    token = create_jwt_for_user(user)
 
-    # Populate session_state
-    st.session_state["username"] = user["username"]
-    st.session_state["role"] = user.get("role", "employee")
-    st.session_state["full_name"] = user.get("full_name", user["username"])
-    st.session_state["position"] = user.get("position", "")
-    st.session_state["department"] = user.get("department", "")
-    st.session_state["remaining_days"] = user.get("remaining_days", 0)
-
-    # Lưu cookie đơn giản username (không còn token)
-    COOKIES[SESSION_COOKIE_KEY] = username
+    # Lưu cookie client hiện tại
+    COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
+
+    # Update session_state
+    st.session_state.update({
+        "username": user["username"],
+        "role": user.get("role", "employee"),
+        "full_name": user.get("full_name", user["username"]),
+        "position": user.get("position", ""),
+        "department": user.get("department", ""),
+        "remaining_days": user.get("remaining_days", 0),
+        "rerun_needed": True
+    })
 
     placeholder.success(
         f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
     time.sleep(1)
     placeholder.empty()
-
-    st.session_state["rerun_needed"] = True
     return True
 
 
 def logout():
-    placeholder = st.empty()
-    with placeholder:
-        st.info("🚪 Đang đăng xuất...")
-    time.sleep(0.4)
-
-    # Clear session_state
-    keys_to_clear = ["username", "role", "full_name",
-                     "position", "department", "remaining_days", "session_id"]
-    for k in keys_to_clear:
-        if k in st.session_state:
-            del st.session_state[k]
-
-    # Clear cookie
     COOKIES[SESSION_COOKIE_KEY] = ""
     COOKIES.save()
-
-    placeholder.success("✅ Bạn đã đăng xuất thành công!")
-    time.sleep(0.8)
-    placeholder.empty()
+    for k in ["username", "role", "full_name", "position", "department", "remaining_days"]:
+        if k in st.session_state:
+            del st.session_state[k]
     st.session_state["rerun_needed"] = True
-
 
 # ---------------------------
 # Leave-related functions
 # ---------------------------
+
 
 def request_leave(username, start_date, end_date, duration, reason, leave_type, leave_case):
     if not isinstance(start_date, str):
