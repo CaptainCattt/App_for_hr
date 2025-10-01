@@ -21,7 +21,7 @@ st.markdown(
 st.markdown("<br><br>", unsafe_allow_html=True)  # Tạo khoảng cách sau tiêu đề
 
 # --- Restore session từ cookies ---
-user = get_current_user()
+get_current_user()
 
 # --- Flags ---
 if "rerun_needed" not in st.session_state:
