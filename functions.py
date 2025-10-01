@@ -15,14 +15,12 @@ SESSION_DURATION_HOURS = 8  # token lifetime
 # ---------------- JWT ----------------
 
 
-def create_jwt_for_user(user, session_id):
+def create_jwt(user_id, session_id):
     """Tạo JWT cho user dựa trên session_id"""
     exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
     payload = {
+        "sub": str(user_id),
         "sid": session_id,
-        "sub": str(user.get("_id", "")),
-        "username": user["username"],
-        "role": user.get("role", "employee"),
         "exp": exp
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
@@ -41,38 +39,33 @@ def verify_jwt(token):
 
 
 def get_current_user():
+    """Lấy thông tin user từ JWT + cookie, kiểm tra session_id"""
     token = COOKIES.get(SESSION_COOKIE_KEY)
     if not token:
         return None
 
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    username = payload.get("username")
+    user_id = payload.get("sub")
     session_id = payload.get("sid")
-    if not username or not session_id:
+    if not user_id or not session_id:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    user = USERS_COL.find_one({"username": username})
+    user = USERS_COL.find_one({"_id": ObjectId(user_id)})
     if not user:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
-    # --- Check session_id tồn tại trong sessions ---
-    valid = False
-    for s in user.get("sessions", []):
-        if s["sid"] == session_id and s["expires_at"] > datetime.utcnow():
-            valid = True
-            break
-
-    if not valid:
+    # --- Kiểm tra session_id của client có trùng với DB không ---
+    if user.get("current_session_id") != session_id:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
@@ -80,8 +73,8 @@ def get_current_user():
     return {
         "_id": str(user["_id"]),
         "username": user["username"],
-        "role": user.get("role", "employee"),
         "full_name": user.get("full_name", user["username"]),
+        "role": user.get("role", "employee"),
         "position": user.get("position", ""),
         "department": user.get("department", ""),
         "remaining_days": user.get("remaining_days", 0)
@@ -96,60 +89,33 @@ def do_login(username, password):
 
     user = USERS_COL.find_one({"username": username})
     if not user:
-        # Tạo user mới
-        USERS_COL.insert_one({
-            "username": username,
-            "password": password,
-            "role": "employee",
-            "full_name": username,
-            "position": "",
-            "department": "",
-            "remaining_days": 0,
-            "created_at": datetime.utcnow(),
-            "sessions": []
-        })
-        user = USERS_COL.find_one({"username": username})
-    else:
-        if user.get("password") != password:
-            placeholder.error("❌ Sai username hoặc password")
-            time.sleep(1)
-            placeholder.empty()
-            return False
+        placeholder.error("❌ Người dùng không tồn tại")
+        time.sleep(1.2)
+        placeholder.empty()
+        return False
+    if user.get("password") != password:
+        placeholder.error("❌ Sai username hoặc password")
+        time.sleep(1.2)
+        placeholder.empty()
+        return False
 
-    # --- Tạo session_id mới ---
+    # --- Tạo session_id mới riêng cho client này ---
     session_id = str(uuid.uuid4())
-    exp = datetime.utcnow() + timedelta(hours=8)
-    session_data = {
-        "sid": session_id,
-        "created_at": datetime.utcnow(),
-        "expires_at": exp
-    }
-
-    # --- Lưu vào mảng sessions của user ---
-    USERS_COL.update_one(
-        {"_id": user["_id"]},
-        {"$push": {"sessions": session_data}}
-    )
+    USERS_COL.update_one({"_id": user["_id"]}, {"$set": {
+                         "current_session_id": session_id, "last_login_at": datetime.utcnow()}})
 
     # --- Tạo JWT ---
-    payload = {
-        "sid": session_id,
-        "sub": str(user["_id"]),
-        "username": user["username"],
-        "role": user.get("role", "employee"),
-        "exp": exp
-    }
-    token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+    token, _ = create_jwt(user["_id"], session_id)
 
-    # --- Lưu cookie riêng cho thiết bị này ---
+    # --- Lưu cookie cố định ---
     COOKIES[SESSION_COOKIE_KEY] = token
     COOKIES.save()
 
     # --- Cập nhật session_state ---
     st.session_state.update({
         "username": user["username"],
+        "full_name": user.get("full_name", username),
         "role": user.get("role", "employee"),
-        "full_name": user.get("full_name", user["username"]),
         "position": user.get("position", ""),
         "department": user.get("department", ""),
         "remaining_days": user.get("remaining_days", 0),
@@ -164,27 +130,11 @@ def do_login(username, password):
 
 
 def logout():
-    token = COOKIES.get(SESSION_COOKIE_KEY)
-    if token:
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            session_id = payload.get("sid")
-            username = payload.get("username")
-            if username and session_id:
-                USERS_COL.update_one(
-                    {"username": username},
-                    {"$pull": {"sessions": {"sid": session_id}}}
-                )
-        except:
-            pass
-
     COOKIES[SESSION_COOKIE_KEY] = ""
     COOKIES.save()
-
     for k in ["username", "role", "full_name", "position", "department", "remaining_days"]:
         if k in st.session_state:
             del st.session_state[k]
-
     st.session_state["rerun_needed"] = True
 
 # ---------------------------
