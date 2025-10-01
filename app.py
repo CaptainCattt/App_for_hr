@@ -114,31 +114,23 @@ else:
             "Ngày kết thúc nghỉ", value=end_date_default)
         reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
-        # Lấy timestamp lần gửi gần nhất
+        # --- Quản lý cooldown gửi yêu cầu ---
+        cooldown = 60  # giây
         last_sent = st.session_state.get("last_leave_request", 0)
         now_ts = time.time()
-        cooldown = 60  # giây
+        remaining = int(cooldown - (now_ts - last_sent))
+        can_send = (now_ts - last_sent) >= cooldown
 
-        if now_ts - last_sent < cooldown:
-            remaining = int(cooldown - (now_ts - last_sent))
-            warning_placeholder = st.empty()
-            warning_placeholder.warning(
+        # Thông báo cooldown nếu chưa tới thời gian
+        if not can_send:
+            st.warning(
                 f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
-            # 3 giây sau xóa thông báo
-            time.sleep(3)
-            warning_placeholder.empty()
-            can_send = False
-        else:
-            can_send = True
 
-        if st.button("📨 Gửi yêu cầu") and can_send:
+        # Button gửi yêu cầu, disable nếu đang cooldown
+        if st.button("📨 Gửi yêu cầu", disabled=not can_send):
             if not reason_text.strip():
-                warning_placeholder = st.empty()
-                warning_placeholder.warning("⚠️ Vui lòng nhập lý do nghỉ")
-                time.sleep(3)
-                warning_placeholder.empty()
+                st.warning("⚠️ Vui lòng nhập lý do nghỉ")
             else:
-
                 send_leave_request(
                     st.session_state["username"],
                     start_date,
@@ -148,9 +140,11 @@ else:
                     leave_type,
                     leave_case
                 )
+                # cập nhật timestamp
+                st.session_state["last_leave_request"] = now_ts
 
-        # Fix nhanh bug UI
-        st.markdown("<br>"*15, unsafe_allow_html=True)
+                # Fix nhanh bug UI
+                st.markdown("<br>"*15, unsafe_allow_html=True)
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
