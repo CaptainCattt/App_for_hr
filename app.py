@@ -121,14 +121,11 @@ else:
         remaining = int(cooldown - (now_ts - last_sent))
         can_send = (now_ts - last_sent) >= cooldown
 
-        # Thông báo cooldown nếu chưa tới thời gian
-        if not can_send:
-            st.warning(
-                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
-
-        # Button gửi yêu cầu, disable nếu đang cooldown
-        if st.button("📨 Gửi yêu cầu", disabled=not can_send):
-            if not reason_text.strip():
+        if st.button("📨 Gửi yêu cầu"):
+            if not can_send:
+                st.warning(
+                    f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
+            elif not reason_text.strip():
                 st.warning("⚠️ Vui lòng nhập lý do nghỉ")
             else:
                 send_leave_request(
@@ -140,11 +137,11 @@ else:
                     leave_type,
                     leave_case
                 )
-                # cập nhật timestamp
                 st.session_state["last_leave_request"] = now_ts
+                st.success("📤 Yêu cầu nghỉ đã được gửi!")
 
-                # Fix nhanh bug UI
-                st.markdown("<br>"*15, unsafe_allow_html=True)
+        # Fix nhanh bug UI
+        st.markdown("<br>"*15, unsafe_allow_html=True)
 
     # --- Tab quản lý admin ---
     if tab2 is not None:
