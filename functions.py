@@ -73,27 +73,28 @@ def send_leave_request(username, start_date, end_date, duration, reason, leave_t
 
 def approve_leave(l_id, user_name):
     placeholder = st.empty()
-    with placeholder:
-        st.info("✅ Đang duyệt...")
-    time.sleep(0.5)
+    placeholder.info("✅ Đang duyệt...")
+
     leave = LEAVES_COL.find_one({"_id": ObjectId(l_id)})
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    LEAVES_COL.update_one({"_id": ObjectId(l_id)}, {"$set": {
-        "status": "approved",
-        "approved_by": st.session_state.get("full_name", "Admin"),
-        "approved_at": now_str
-    }})
+    LEAVES_COL.update_one(
+        {"_id": ObjectId(l_id)},
+        {"$set": {
+            "status": "approved",
+            "approved_by": st.session_state.get("full_name", "Admin"),
+            "approved_at": now_str
+        }}
+    )
 
     if leave.get("leave_type") == "Nghỉ phép năm":
         duration = float(leave.get("duration", 1))
         USERS_COL.update_one({"username": user_name}, {
                              "$inc": {"remaining_days": -duration}})
 
+    # Hiển thị thông báo thành công
     placeholder.success(
         f"✅ Yêu cầu của {user_name} đã được duyệt lúc {now_str}!")
-    time.sleep(3)
-    placeholder.empty()
 
 
 def reject_leave(l_id, user_name):
