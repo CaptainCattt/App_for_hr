@@ -35,7 +35,7 @@ if st.session_state.get("rerun_needed"):
     except AttributeError:
         pass
 
-# --- Khởi tạo session state mặc định ---
+# --- Khởi tạo session_state mặc định ---
 for key, default in {
     "username": "",
     "full_name": "",
@@ -47,11 +47,6 @@ for key, default in {
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
-
-# --- Hiển thị thông báo approve/reject ---
-if st.session_state.get("leave_message"):
-    st.info(st.session_state["leave_message"])
-    st.session_state["leave_message"] = ""
 
 # --- Login UI ---
 if not current_user:
