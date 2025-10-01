@@ -118,10 +118,6 @@ def reject_leave(l_id, user_name):
 
 def do_login(username, password):
     placeholder = st.empty()
-    with placeholder:
-        st.info("🔑 Đang đăng nhập...")
-    time.sleep(0.5)
-
     user = USERS_COL.find_one({"username": username, "password": password})
     if user:
         # Lưu thông tin session
@@ -142,7 +138,7 @@ def do_login(username, password):
     else:
         placeholder.error("❌ Sai username hoặc password")
 
-    time.sleep(1)
+    time.sleep(1.5)
     placeholder.empty()
 
     # Yêu cầu app rerun để cập nhật UI
@@ -159,6 +155,6 @@ def logout():
     COOKIES["role"] = ""
     COOKIES.save()
     placeholder.success("✅ Bạn đã đăng xuất thành công!")
-    time.sleep(3)
+    time.sleep(1.5)
     placeholder.empty()
     st.session_state["rerun_needed"] = True
