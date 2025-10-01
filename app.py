@@ -121,23 +121,24 @@ else:
 
         cooldown = 60  # giây
         now_ts = time.time()
+        last_sent = st.session_state.get("last_leave_request", 0)
+        remaining = max(0, int(cooldown - (now_ts - last_sent)))
 
-        # Tự động mở lại button nếu đã quá cooldown
-        if now_ts - st.session_state["last_leave_request"] >= cooldown:
+        if "show_cooldown_warning" not in st.session_state:
+            st.session_state["show_cooldown_warning"] = False
+
+        # Nếu còn cooldown, bật flag hiển thị
+        if remaining > 0:
+            st.session_state["show_cooldown_warning"] = True
+        else:
+            st.session_state["show_cooldown_warning"] = False
             st.session_state["leave_btn_disabled"] = False
 
-        # Button gửi yêu cầu
-        if st.session_state["leave_btn_disabled"]:
-            remaining = max(
-                0, int(cooldown - (now_ts - st.session_state["last_leave_request"])))
-
-            warning_placeholder = st.empty()  # tạo placeholder
-            warning_placeholder.info(
-                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo."
-            )
-
-            # tự động xóa sau 1.5 giây
-            st.experimental_rerun()
+        # Hiển thị warning tạm thời
+        if st.session_state["show_cooldown_warning"]:
+            placeholder = st.empty()
+            placeholder.info(
+                f"⏳ Vui lòng đợi {remaining} giây trước khi gửi yêu cầu tiếp theo.")
         else:
             if st.button("📨 Gửi yêu cầu"):
                 if not reason_text.strip():
