@@ -186,9 +186,10 @@ else:
     if tab2 is not None:
         with tab2:
             st.markdown(
-                "<h3 style='text-align: center;'>📊 Quản lý yêu cầu nghỉ</h3>",
+                "<h2 style='text-align: center;'>📊 Quản lý yêu cầu nghỉ</h2>",
                 unsafe_allow_html=True
             )
+            st.markdown("<br><br>", unsafe_allow_html=True)
 
             all_leaves = sorted(
                 view_leaves(),
@@ -258,7 +259,7 @@ else:
 
                     st.markdown("---")
 
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("<br><br>", unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
 
