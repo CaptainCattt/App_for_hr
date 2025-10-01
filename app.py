@@ -196,8 +196,25 @@ else:
     # --- Tab lịch sử ---
     with tab3:
         st.subheader("📜 Lịch sử yêu cầu đã xin")
-        user_leaves = sorted(view_leaves(st.session_state["username"]), key=lambda x: x.get(
-            "start_date", "1900-01-01"), reverse=True)
+        # Lấy danh sách yêu cầu của user, sort theo start_date giảm dần
+        scroll_style = """
+            <style>
+                .scrollable {
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+            </style>
+        """
+        st.markdown(scroll_style, unsafe_allow_html=True)
+
+        with st.container():
+            st.markdown('<div class="scrollable">', unsafe_allow_html=True)
+
+            user_leaves = sorted(
+                view_leaves(st.session_state["username"]),
+                key=lambda x: x.get("start_date", "1900-01-01"),
+                reverse=True
+            )
         if not user_leaves:
             st.info("Bạn chưa có yêu cầu nghỉ nào.")
         else:
