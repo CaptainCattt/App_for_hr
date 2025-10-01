@@ -171,8 +171,12 @@ else:
 
             st.markdown('<div class="scrollable">', unsafe_allow_html=True)
 
-            all_leaves = sorted(view_leaves(), key=lambda x: x.get(
-                "start_date", "1900-01-01"), reverse=True)
+            all_leaves = sorted(
+                view_leaves(),
+                key=lambda x: datetime.strptime(
+                    x.get("start_date", "1900-01-01"), "%Y-%m-%d"),
+                reverse=True
+            )
 
             if not all_leaves:
                 st.info("Chưa có yêu cầu nghỉ nào.")
