@@ -93,6 +93,7 @@ def get_current_user():
 def do_login(username, password):
     """
     Authenticate user, create JWT and session record, set cookie.
+    Fix: tránh ghi đè user khác trên cùng 1 máy/browser
     """
     placeholder = st.empty()
     with placeholder:
@@ -106,8 +107,19 @@ def do_login(username, password):
         placeholder.empty()
         return False
 
-    # tạo token + session_id
-    token, exp, session_id = create_jwt_for_user(user)
+    # --- Check nếu đã có user khác login trên máy này ---
+    current_token = COOKIES.get(SESSION_COOKIE_KEY)
+    if current_token:
+        # Xóa session cũ trên DB
+        SESSIONS_COL.delete_one({"token": current_token})
+        # Xóa cookie cũ
+        COOKIES[SESSION_COOKIE_KEY] = ""
+        COOKIES.save()
+
+    # --- Tạo token mới + session_id duy nhất ---
+    session_id = str(uuid.uuid4())  # duy nhất cho client này
+    token, exp, _ = create_jwt_for_user(user, session_id=session_id)
+
     # Save session doc
     save_session(token, user["username"], user.get(
         "role", "employee"), exp, session_id)
@@ -128,6 +140,7 @@ def do_login(username, password):
         f"✅ Đăng nhập thành công! Chào {st.session_state['full_name']}")
     time.sleep(1)
     placeholder.empty()
+
     # ask app to rerun to refresh UI
     st.session_state["rerun_needed"] = True
     return True
