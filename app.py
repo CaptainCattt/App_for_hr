@@ -79,7 +79,7 @@ else:
     # --- Tab xin nghỉ ---
     with tab1:
         st.subheader("📝 Gửi yêu cầu nghỉ")
-        leave_type = st.radio(
+        leave_type = st.selectbox(
             "Vui lòng chọn loại ngày nghỉ",
             ("Nghỉ phép năm", "Nghỉ không hưởng lương",
              "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
