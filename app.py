@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date, timedelta
 from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login
 from settings import EMPLOYEES_COL, LEAVES_COL
-import time
+import datetime
 
 # ===============================
 # CẤU HÌNH CƠ BẢN
@@ -110,28 +110,52 @@ with tab2:
         st.rerun()
 
     # --- Bộ lọc dữ liệu ---
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        status_filter = st.selectbox("Lọc theo trạng thái", [
-            "Tất cả", "pending", "approved", "rejected"])
+        status_filter = st.selectbox(
+            "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
         query_status = None if status_filter == "Tất cả" else status_filter
     with col2:
         search_name = st.text_input("Tìm theo tên nhân viên")
+    with col3:
+        selected_year = st.selectbox(
+            "Năm", options=[str(y) for y in range(2024, datetime.now().year + 1)], index=1)
+    with col4:
+        selected_month = st.selectbox("Tháng", options=[
+                                      f"{i:02d}" for i in range(1, 13)], index=datetime.now().month - 1)
 
+    # --- Lấy dữ liệu từ DB ---
     leaves = view_leaves(query_status)
 
+    # --- Lọc theo tên ---
     if search_name:
         leaves = [l for l in leaves if search_name.lower() in l.get(
             "full_name", "").lower()]
 
-    if not leaves:
-        st.info("🕊️ Chưa có yêu cầu nghỉ nào.")
+    # --- Lọc theo tháng/năm ---
+    filtered_leaves = []
+    for leave in leaves:
+        try:
+            start_date = leave.get("start_date")
+            if start_date:
+                year = start_date[:4]
+                month = start_date[5:7]
+                if year == selected_year and month == selected_month:
+                    filtered_leaves.append(leave)
+        except Exception:
+            continue
+
+    # --- Hiển thị kết quả ---
+    if not filtered_leaves:
+        st.info(
+            f"🕊️ Không có yêu cầu nghỉ nào trong {selected_month}/{selected_year}.")
     else:
-        for leave in leaves:
+        for leave in filtered_leaves:
             with st.expander(f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')}"):
                 st.write(f"**Phòng ban:** {leave.get('department', '')}")
                 st.write(
-                    f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)")
+                    f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)"
+                )
                 st.write(f"**Loại nghỉ:** {leave.get('leave_type')}")
                 st.write(f"**Lý do chi tiết:** {leave.get('reason', '')}")
                 st.write(
