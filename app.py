@@ -215,6 +215,15 @@ with tab_objects[0]:
                 st.stop()
 
             # --- Thông tin cơ bản ---
+            selected_emp = {
+                "full_name": "Phạm Văn Minh",
+                "department": "Marketing",
+                "position": "Trưởng nhóm",
+                "dob": "1992-04-25",
+                "phone": "0912345678",
+                "remaining_days": 8
+            }
+
             emp_name = selected_emp.get("full_name", "")
             department = selected_emp.get("department", "")
             position = selected_emp.get("position", "")
@@ -224,31 +233,53 @@ with tab_objects[0]:
 
             st.markdown(
                 f"""
-                <div style="
-                    background-color: #f9fafb;
-                    padding: 25px;
-                    border-radius: 15px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-                    margin-top: 10px;
-                    font-family: 'Segoe UI', sans-serif;
-                ">
-                    <h3 style="color:#333; margin-bottom:15px;">🧾 Thông tin cá nhân</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-                        
-                        <div style="flex: 1; min-width: 250px;">
+                <style>
+                    .info-card {{
+                        background-color: #f9fafb;
+                        padding: 25px;
+                        border-radius: 15px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                        margin-top: 15px;
+                        font-family: 'Segoe UI', sans-serif;
+                    }}
+                    .info-header {{
+                        font-size: 22px;
+                        font-weight: 600;
+                        color: #333;
+                        margin-bottom: 15px;
+                    }}
+                    .info-flex {{
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 20px;
+                    }}
+                    .info-col {{
+                        flex: 1;
+                        min-width: 250px;
+                        line-height: 1.7;
+                        color: #222;
+                    }}
+                    .badge {{
+                        background-color: #e0f7ec;
+                        color: #15803d;
+                        padding: 3px 8px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                    }}
+                </style>
+
+                <div class="info-card">
+                    <div class="info-header">🧾 Thông tin cá nhân</div>
+                    <div class="info-flex">
+                        <div class="info-col">
                             <p><b>👤 Họ và tên:</b> {emp_name}</p>
                             <p><b>🏢 Phòng ban:</b> {department}</p>
                             <p><b>💼 Chức vụ:</b> {position}</p>
                         </div>
-
-                        <div style="flex: 1; min-width: 250px;">
+                        <div class="info-col">
                             <p><b>🎂 Ngày sinh:</b> {dob}</p>
                             <p><b>📞 Số điện thoại:</b> {phone}</p>
-                            <p><b>🏖️ Ngày phép còn lại:</b> 
-                                <span style="background-color:#e0f7ec; color:#15803d; padding:3px 8px; border-radius:8px;">
-                                    {remaining}
-                                </span>
-                            </p>
+                            <p><b>🏖️ Ngày phép còn lại:</b> <span class="badge">{remaining}</span></p>
                         </div>
                     </div>
                 </div>
