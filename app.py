@@ -55,9 +55,6 @@ with tab_objects[0]:
         "remaining_days", 0) if selected_emp else 0
 
     st.text_input("🏢 Phòng ban", department, disabled=True)
-    st.text_input("💼 Chức vụ", position, disabled=True)
-    st.text_input("🏖️ Ngày phép còn lại", str(
-        remaining_days), disabled=True)
 
     # --- Chọn loại nghỉ ---
     leave_type = st.selectbox(
