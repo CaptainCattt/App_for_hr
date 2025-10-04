@@ -39,14 +39,12 @@ def verify_jwt(token):
 
 
 def get_current_user():
-    """Lấy thông tin user từ JWT + cookie, kiểm tra session_id"""
     token = COOKIES.get(SESSION_COOKIE_KEY)
     if not token:
         return None
 
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
-    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+    payload = verify_jwt(token)
+    if not payload:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
@@ -64,12 +62,14 @@ def get_current_user():
         COOKIES.save()
         return None
 
-    # --- Kiểm tra session_id của client có trùng với DB không ---
-    if user.get("current_session_id") != session_id:
+    # --- Check session_id có tồn tại trong danh sách của user không ---
+    user_sessions = user.get("sessions", [])
+    if session_id not in user_sessions:
         COOKIES[SESSION_COOKIE_KEY] = ""
         COOKIES.save()
         return None
 
+    # --- Trả về thông tin user ---
     return {
         "_id": str(user["_id"]),
         "username": user["username"],
@@ -101,8 +101,13 @@ def do_login(username, password):
 
     # --- Tạo session_id mới riêng cho client này ---
     session_id = str(uuid.uuid4())
-    USERS_COL.update_one({"_id": user["_id"]}, {"$set": {
-                         "current_session_id": session_id, "last_login_at": datetime.utcnow()}})
+    USERS_COL.update_one(
+        {"_id": user["_id"]},
+        {
+            "$addToSet": {"sessions": session_id},  # thêm vào mảng sessions
+            "$set": {"last_login_at": datetime.utcnow()}
+        }
+    )
 
     # --- Tạo JWT ---
     token, _ = create_jwt(user["_id"], session_id)
@@ -130,12 +135,26 @@ def do_login(username, password):
 
 
 def logout():
+    # --- Xóa cookie ---
+    token = COOKIES.get(SESSION_COOKIE_KEY)
+    if token:
+        payload = verify_jwt(token)
+        if payload:
+            user_id = payload.get("sub")
+            session_id = payload.get("sid")
+            # Gỡ session_id khỏi DB khi logout
+            USERS_COL.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$pull": {"sessions": session_id}}
+            )
+
     COOKIES[SESSION_COOKIE_KEY] = ""
     COOKIES.save()
     for k in ["username", "role", "full_name", "position", "department", "remaining_days"]:
         if k in st.session_state:
             del st.session_state[k]
     st.session_state["rerun_needed"] = True
+
 
 # ---------------------------
 # Leave-related functions

@@ -17,7 +17,7 @@ LEAVES_COL = db["leaves"]
 # Lưu sessions trong mảng "sessions" của user, không dùng collection riêng
 
 # --- Cookie Config ---
-cookie_key = f"leave_mgmt_{str(uuid.uuid4())[:8]}"
+cookie_key = "leave_mgmt_session"  # cố định, không random
 COOKIES = EncryptedCookieManager(
     prefix=cookie_key, password=st.secrets["COOKIE_PASSWORD"])
 if not COOKIES.ready():
