@@ -217,7 +217,29 @@ with tab_objects[0]:
                 st.warning(
                     "⚠️ Bạn cần đăng nhập ở tab 'Dành cho HR' để xem Dashboard.")
                 st.stop()
+            employees = list(EMPLOYEES_COL.find({}, {"_id": 0}))
+            employee_names = [emp["full_name"] for emp in employees]
 
+            selected_emp_name = st.selectbox(
+                "👤 Chọn nhân viên", employee_names)
+
+            selected_emp = next(
+                (e for e in employees if e["full_name"] == selected_emp_name), None)
+
+            if not selected_emp:
+                st.error("❌ Không tìm thấy thông tin nhân viên.")
+                st.stop()
+
+            # --- Thông tin cơ bản ---
+            st.markdown("### 🧾 Thông tin cá nhân")
+            col1, col2, col3 = st.columns(3)
+            col1.write(f"**Họ và tên:** {selected_emp.get('full_name', '')}")
+            col2.write(f"**Phòng ban:** {selected_emp.get('department', '')}")
+            col3.write(f"**Chức vụ:** {selected_emp.get('position', '')}")
+            col1.write(f"**Ngày sinh:** {selected_emp.get('dob', '-')}")
+            col2.write(f"**Số điện thoại:** {selected_emp.get('phone', '-')}")
+            col3.write(
+                f"**Ngày phép còn lại:** {selected_emp.get('remaining_days', 0)}")
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
 
