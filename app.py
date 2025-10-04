@@ -47,7 +47,16 @@ tab_objects = st.tabs(tabs)
 with tab_objects[0]:
     st.subheader("📝 Gửi yêu cầu nghỉ")
 
-    # --- Lấy danh sách nhân viên ---
+    # --- Khởi tạo biến session để lưu thời điểm bấm nút ---
+    if "last_submit_time" not in st.session_state:
+        st.session_state["last_submit_time"] = None
+
+    cooldown_seconds = 60  # Thời gian chờ giữa các lần gửi
+
+    tab_objects[0].subheader("📝 Gửi yêu cầu nghỉ")
+
+    # --- Các phần nhập liệu như trước ---
+    # Lấy danh sách nhân viên
     employees = list(EMPLOYEES_COL.find(
         {}, {"_id": 0, "full_name": 1, "department": 1, "position": 1, "remaining_days": 1}))
     employee_names = [emp["full_name"] for emp in employees]
@@ -63,11 +72,11 @@ with tab_objects[0]:
 
     st.text_input("🏢 Phòng ban", department, disabled=True)
 
-    # --- Chọn loại nghỉ ---
+    # Chọn loại nghỉ
     leave_type = st.selectbox(
         "Vui lòng chọn loại ngày nghỉ",
         ("Nghỉ phép năm", "Nghỉ không hưởng lương",
-            "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
+         "Nghỉ hưởng BHXH", "Nghỉ việc riêng có hưởng lương"),
         index=0
     )
 
@@ -96,18 +105,35 @@ with tab_objects[0]:
         "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0)
     start_date = col2.date_input("Ngày bắt đầu nghỉ", value=date.today())
     end_date_default = start_date + timedelta(days=int(duration)-1)
-    end_date = col3.date_input(
-        "Ngày kết thúc nghỉ", value=end_date_default)
+    end_date = col3.date_input("Ngày kết thúc nghỉ", value=end_date_default)
     reason_text = st.text_area("📝 Lý do chi tiết", height=100)
 
-    # --- Gửi yêu cầu ---
-    if st.button("📨 Gửi yêu cầu"):
-        if not reason_text.strip():
-            st.warning("⚠️ Vui lòng nhập lý do nghỉ.")
-        else:
-            send_leave_request(selected_name, department, start_date,
-                               end_date, duration, reason_text, leave_type, leave_case)
+    # --- Kiểm tra cooldown ---
+    now = datetime.now()
+    if st.session_state["last_submit_time"]:
+        elapsed = (now - st.session_state["last_submit_time"]).total_seconds()
+    else:
+        elapsed = cooldown_seconds + 1  # cho phép bấm lần đầu
 
+    button_disabled = elapsed < cooldown_seconds
+    cooldown_remaining = int(
+        cooldown_seconds - elapsed) if button_disabled else 0
+
+    if button_disabled:
+        st.info(f"⏳ Vui lòng chờ {cooldown_remaining} giây trước khi gửi lại.")
+    else:
+        if st.button("📨 Gửi yêu cầu"):
+            if not reason_text.strip():
+                st.warning("⚠️ Vui lòng nhập lý do nghỉ.")
+            else:
+                # Gọi hàm gửi yêu cầu
+                send_leave_request(
+                    selected_name, department, start_date,
+                    end_date, duration, reason_text, leave_type, leave_case
+                )
+                st.success("✅ Yêu cầu đã được gửi!")
+                # Lưu thời điểm lần bấm nút
+                st.session_state["last_submit_time"] = datetime.now()
     # ===============================
     # TAB 2: HR QUẢN LÝ
     # ===============================
