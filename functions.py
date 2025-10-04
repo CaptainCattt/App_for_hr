@@ -29,8 +29,8 @@ def create_jwt(user_id, session_id):
     """Tạo JWT cho user dựa trên session_id"""
     exp = datetime.utcnow() + timedelta(hours=SESSION_DURATION_HOURS)
     payload = {
-        "sub": str(user_id),
-        "sid": session_id,
+        "user_id": str(user_id),
+        "session_id": session_id,
         "exp": exp
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
@@ -49,6 +49,7 @@ def verify_jwt(token):
 # ===============================
 # USER SESSION FUNCTIONS
 # ===============================
+
 def get_current_user():
     token = cookies.get(SESSION_COOKIE_KEY)
     if not token:
@@ -60,8 +61,8 @@ def get_current_user():
         cookies.save()
         return None
 
-    user_id = payload.get("sub")
-    session_id = payload.get("sid")
+    user_id = payload.get("user_id")
+    session_id = payload.get("session_id")
     if not user_id or not session_id:
         cookies[SESSION_COOKIE_KEY] = ""
         cookies.save()
@@ -73,7 +74,7 @@ def get_current_user():
         cookies.save()
         return None
 
-    # --- Kiểm tra session_id có tồn tại trong DB ---
+    # ❗ Kiểm tra session_id có tồn tại trong DB không
     if session_id not in user.get("sessions", []):
         cookies[SESSION_COOKIE_KEY] = ""
         cookies.save()
@@ -86,7 +87,8 @@ def get_current_user():
         "role": user.get("role", "employee"),
         "position": user.get("position", ""),
         "department": user.get("department", ""),
-        "remaining_days": user.get("remaining_days", 0)
+        "remaining_days": user.get("remaining_days", 0),
+        "session_id": session_id
     }
 
 
@@ -111,6 +113,8 @@ def do_login(username, password):
 
     # --- Tạo session_id riêng ---
     session_id = str(uuid.uuid4())
+
+    # --- Lưu session_id vào DB ---
     USERS_COL.update_one(
         {"_id": user["_id"]},
         {
@@ -134,6 +138,7 @@ def do_login(username, password):
         "position": user.get("position", ""),
         "department": user.get("department", ""),
         "remaining_days": user.get("remaining_days", 0),
+        "session_id": session_id,
         "rerun_needed": True
     })
 
@@ -149,17 +154,20 @@ def logout():
     if token:
         payload = verify_jwt(token)
         if payload:
-            user_id = payload.get("sub")
-            session_id = payload.get("sid")
-            USERS_COL.update_one(
-                {"_id": ObjectId(user_id)},
-                {"$pull": {"sessions": session_id}}
-            )
+            user_id = payload.get("user_id")
+            session_id = payload.get("session_id")
+            if user_id and session_id:
+                USERS_COL.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$pull": {"sessions": session_id}}
+                )
 
+    # --- Xóa cookie ---
     cookies[SESSION_COOKIE_KEY] = ""
     cookies.save()
 
-    for k in ["username", "role", "full_name", "position", "department", "remaining_days"]:
+    # --- Xóa session_state ---
+    for k in ["username", "role", "full_name", "position", "department", "remaining_days", "session_id"]:
         st.session_state.pop(k, None)
 
     st.session_state["rerun_needed"] = True
