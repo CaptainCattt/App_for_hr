@@ -108,42 +108,26 @@ with tab_objects[0]:
         with tab_objects[1]:
             st.subheader("👩‍💼 Trang quản lý nghỉ phép")
 
-            # --- Nếu HR chưa đăng nhập ---
-            if "hr_logged_in" not in st.session_state:
-                username = st.text_input("👤 Tên đăng nhập")
-                password = st.text_input("🔒 Mật khẩu", type="password")
-
-                if st.button("Đăng nhập"):
-                    if check_admin_login(username, password):
-                        st.session_state.hr_logged_in = True
-                        st.session_state.hr_username = username
-                        st.success("✅ Đăng nhập thành công!")
-                        st.rerun()
-                    else:
-                        st.error("❌ Sai tài khoản hoặc mật khẩu!")
-                st.stop()
-
-            # --- Sau khi đăng nhập ---
-            st.success(f"👋 Xin chào {st.session_state.hr_username}")
-
-            if st.button("🚪 Đăng xuất"):
-                st.session_state.clear()
-                st.rerun()
-
             # --- Bộ lọc dữ liệu ---
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 status_filter = st.selectbox(
                     "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
                 query_status = None if status_filter == "Tất cả" else status_filter
+
             with col2:
                 search_name = st.text_input("Tìm theo tên nhân viên")
+
             with col3:
+                year_options = [
+                    "Tất cả"] + [str(y) for y in range(2024, datetime.now().year + 1)]
                 selected_year = st.selectbox(
-                    "Năm", options=[str(y) for y in range(2024, datetime.now().year + 1)], index=1)
+                    "Năm", options=year_options, index=year_options.index(str(datetime.now().year)))
+
             with col4:
-                selected_month = st.selectbox("Tháng", options=[
-                    f"{i:02d}" for i in range(1, 13)], index=datetime.now().month - 1)
+                month_options = ["Tất cả"] + [f"{i:02d}" for i in range(1, 13)]
+                selected_month = st.selectbox(
+                    "Tháng", options=month_options, index=datetime.now().month)
 
             # --- Lấy dữ liệu từ DB ---
             leaves = view_leaves(query_status)
@@ -158,11 +142,17 @@ with tab_objects[0]:
             for leave in leaves:
                 try:
                     start_date = leave.get("start_date")
-                    if start_date:
-                        year = start_date[:4]
-                        month = start_date[5:7]
-                        if year == selected_year and month == selected_month:
-                            filtered_leaves.append(leave)
+                    if not start_date:
+                        continue
+                    year = start_date[:4]
+                    month = start_date[5:7]
+
+                    # Điều kiện lọc động
+                    if (
+                        (selected_year == "Tất cả" or year == selected_year)
+                        and (selected_month == "Tất cả" or month == selected_month)
+                    ):
+                        filtered_leaves.append(leave)
                 except Exception:
                     continue
 
