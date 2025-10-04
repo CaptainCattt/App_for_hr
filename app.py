@@ -14,18 +14,19 @@ st.title("🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ")
 
 with st.sidebar:
     st.header("🔐 Đăng nhập HR")
-    password = st.text_input("Mật khẩu HR", type="password")
-    if st.button("Đăng nhập"):
-        if check_admin_login(password):
-            st.session_state["is_hr"] = True
-            st.success("Đăng nhập thành công!")
-        else:
-            st.error("Sai mật khẩu!")
+    username = st.text_input("👤 Tên đăng nhập")
+    password = st.text_input("🔑 Mật khẩu", type="password")
 
-    if st.session_state.get("is_hr"):
+    if st.button("Đăng nhập"):
+        if check_admin_login(username, password):
+            st.rerun()
+
+    if st.session_state.get("hr_logged_in"):
+        st.success(f"Xin chào, {st.session_state.get('admin_name', 'Admin')}!")
         if st.button("Đăng xuất"):
             st.session_state.clear()
             st.rerun()
+
 
 tabs = ["📝 Gửi yêu cầu nghỉ"]
 if "hr_logged_in" in st.session_state and st.session_state.hr_logged_in:
