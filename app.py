@@ -35,7 +35,7 @@ with st.sidebar:
             st.rerun()
 
 
-tabs = ["📝 Gửi yêu cầu nghỉ"]
+tabs = ["📝 Yêu cầu"]
 if "hr_logged_in" in st.session_state and st.session_state.hr_logged_in:
     tabs.extend(["👩‍💼 Quản lý yêu cầu", "📊 Dashboard nhân viên"])
 
