@@ -1,19 +1,21 @@
 import streamlit as st
 from datetime import date, timedelta
+from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_hr_login
+from settings import EMPLOYEES_COL, LEAVES_COL
 import time
-from functions import send_leave_request, view_leaves, approve_leave, reject_leave, check_admin_login, status_badge
-from settings import EMPLOYEES_COL, LEAVES_COL, USERS_COL
 
-st.set_page_config(page_title="HR Leave Form",
-                   page_icon="🏖️", layout="centered")
+# ===============================
+# CẤU HÌNH CƠ BẢN
+# ===============================
+st.set_page_config(
+    page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered")
+st.title("🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ")
 
-st.title("🏖️ Hệ thống xin nghỉ nội bộ")
+tab1, tab2 = st.tabs(["📝 Gửi yêu cầu nghỉ", "👩‍💼 Dành cho HR"])
 
-tab1, tab2 = st.tabs(["📨 Gửi yêu cầu nghỉ", "🧑‍💼 Quản lý HR"])
-
-# ==========================
-#  TAB 1 – FORM XIN NGHỈ
-# ==========================
+# ===============================
+# TAB 1: FORM XIN NGHỈ
+# ===============================
 with tab1:
     st.subheader("📝 Gửi yêu cầu nghỉ")
 
@@ -79,42 +81,74 @@ with tab1:
             send_leave_request(selected_name, department, start_date,
                                end_date, duration, reason_text, leave_type, leave_case)
 
-# ==========================
-#  TAB 2 – QUẢN LÝ HR
-# ==========================
+# ===============================
+# TAB 2: HR QUẢN LÝ
+# ===============================
 with tab2:
-    st.subheader("🧑‍💼 Khu vực HR")
+    st.subheader("👩‍💼 Trang quản lý nghỉ phép")
 
-    if not st.session_state.get("is_admin", False):
-        pwd = st.text_input("🔐 Nhập mật khẩu HR", type="password")
+    # --- Nếu HR chưa đăng nhập ---
+    if "hr_logged_in" not in st.session_state:
+        username = st.text_input("👤 Tên đăng nhập")
+        password = st.text_input("🔒 Mật khẩu", type="password")
+
         if st.button("Đăng nhập"):
-            check_admin_login(pwd)
+            if check_hr_login(username, password):
+                st.session_state.hr_logged_in = True
+                st.session_state.hr_username = username
+                st.success("✅ Đăng nhập thành công!")
+                st.rerun()
+            else:
+                st.error("❌ Sai tài khoản hoặc mật khẩu!")
         st.stop()
 
-    # --- Nếu đã đăng nhập HR ---
-    st.markdown("### 📋 Danh sách yêu cầu nghỉ")
+    # --- Sau khi đăng nhập ---
+    st.success(f"👋 Xin chào {st.session_state.hr_username}")
 
-    status_filter = st.selectbox("Lọc theo trạng thái", [
-                                 "Tất cả", "pending", "approved", "rejected"], index=0)
-    leaves = view_leaves(None if status_filter == "Tất cả" else status_filter)
+    if st.button("🚪 Đăng xuất"):
+        st.session_state.clear()
+        st.rerun()
+
+    # --- Bộ lọc dữ liệu ---
+    col1, col2 = st.columns(2)
+    with col1:
+        status_filter = st.selectbox("Lọc theo trạng thái", [
+            "Tất cả", "pending", "approved", "rejected"])
+        query_status = None if status_filter == "Tất cả" else status_filter
+    with col2:
+        search_name = st.text_input("Tìm theo tên nhân viên")
+
+    leaves = view_leaves(query_status)
+
+    if search_name:
+        leaves = [l for l in leaves if search_name.lower() in l.get(
+            "full_name", "").lower()]
 
     if not leaves:
-        st.info("📭 Chưa có yêu cầu nghỉ nào.")
+        st.info("🕊️ Chưa có yêu cầu nghỉ nào.")
     else:
         for leave in leaves:
-            with st.expander(f"👤 {leave['full_name']} | 🏢 {leave['department']} | {status_badge(leave['status'])}"):
-                st.markdown(
-                    f"- **Loại nghỉ:** {leave['leave_type']} ({leave['leave_case']})\n"
-                    f"- **Thời gian:** {leave['start_date']} → {leave['end_date']} ({leave['duration']} ngày)\n"
-                    f"- **Lý do:** {leave['reason']}\n"
-                    f"- **Gửi lúc:** {leave['requested_at']}\n"
-                )
-                if leave.get("approved_by"):
-                    st.markdown(
-                        f"✅ Duyệt bởi **{leave['approved_by']}** lúc {leave.get('approved_at')}")
+            with st.expander(f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')}"):
+                st.write(f"**Phòng ban:** {leave.get('department', '')}")
+                st.write(
+                    f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)")
+                st.write(f"**Loại nghỉ:** {leave.get('leave_type')}")
+                st.write(f"**Lý do chi tiết:** {leave.get('reason', '')}")
+                st.write(
+                    f"**Trạng thái:** {status_badge(leave.get('status', ''))}")
+                st.write(f"**Gửi lúc:** {leave.get('requested_at', '')}")
 
-                col1, col2 = st.columns(2)
-                if col1.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
-                    approve_leave(leave["_id"], st.session_state["admin_name"])
-                if col2.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
-                    reject_leave(leave["_id"], st.session_state["admin_name"])
+                if leave.get("approved_by"):
+                    st.write(
+                        f"**Phê duyệt bởi:** {leave.get('approved_by')} lúc {leave.get('approved_at')}")
+
+                if leave.get("status") == "pending":
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
+                            approve_leave(
+                                leave["_id"], st.session_state.hr_username)
+                    with col_b:
+                        if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
+                            reject_leave(
+                                leave["_id"], st.session_state.hr_username)
