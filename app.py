@@ -256,6 +256,7 @@ with tab_objects[0]:
                         justify-content: center;
                         gap: 240px;
                         margin-left: 60px;
+                        margin-top: 20px;
                     }}
                     .info-col {{
                         flex: 1;
