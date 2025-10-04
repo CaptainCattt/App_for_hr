@@ -257,7 +257,7 @@ with tab_objects[0]:
                         # Nút duyệt/từ chối chỉ cho pending
                         if status == "pending":
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 10, 1])
+                                                                         1, 3, 1])
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
                                     approve_leave(
