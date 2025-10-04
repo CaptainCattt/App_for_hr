@@ -1,4 +1,5 @@
 # functions.py
+from settings import USERS_COL
 import streamlit as st
 from datetime import datetime
 from bson import ObjectId
@@ -92,3 +93,11 @@ def reject_leave(leave_id, hr_name):
 
 def status_badge(status: str):
     return STATUS_COLORS.get(status, status)
+
+
+def check_hr_login(username, password):
+    """Kiểm tra đăng nhập HR từ MongoDB (dạng password thường)"""
+    user = USERS_COL.find_one({"username": username, "role": "admin"})
+    if not user:
+        return False
+    return user.get("password") == password
