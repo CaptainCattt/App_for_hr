@@ -1,8 +1,6 @@
-# app.py
 import streamlit as st
 from datetime import date
 from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge
-from settings import LEAVES_COL
 
 # ===============================
 # CẤU HÌNH CƠ BẢN
@@ -41,13 +39,31 @@ with tab1:
 # TAB 2: HR QUẢN LÝ
 # ===============================
 with tab2:
-    st.subheader("👩‍💼 Trang quản lý nghỉ phép")
+    st.subheader("👩‍💼 Khu vực HR")
 
-    hr_pass = st.text_input("🔒 Nhập mật khẩu HR để truy cập", type="password")
     HR_PASSWORD = "hr123"
 
-    if hr_pass == HR_PASSWORD:
-        st.success("✅ Đã đăng nhập HR")
+    # Khởi tạo session login
+    if "hr_logged_in" not in st.session_state:
+        st.session_state.hr_logged_in = False
+
+    if not st.session_state.hr_logged_in:
+        hr_pass = st.text_input(
+            "🔒 Nhập mật khẩu HR để đăng nhập", type="password")
+        if st.button("Đăng nhập"):
+            if hr_pass == HR_PASSWORD:
+                st.session_state.hr_logged_in = True
+                st.success("✅ Đăng nhập thành công!")
+                st.rerun()
+            else:
+                st.error("❌ Sai mật khẩu!")
+    else:
+        # Cho phép đăng xuất
+        if st.button("🚪 Đăng xuất"):
+            st.session_state.hr_logged_in = False
+            st.rerun()
+
+        st.success("✅ Đang đăng nhập với quyền HR")
 
         # --- Bộ lọc ---
         col1, col2 = st.columns(2)
@@ -59,7 +75,6 @@ with tab2:
             search_name = st.text_input("Tìm theo tên nhân viên")
 
         leaves = view_leaves(query_status)
-
         if search_name:
             leaves = [l for l in leaves if search_name.lower() in l.get(
                 "full_name", "").lower()]
@@ -87,11 +102,8 @@ with tab2:
                         with col_a:
                             if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
                                 approve_leave(leave["_id"], "HR")
+                                st.rerun()
                         with col_b:
                             if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
                                 reject_leave(leave["_id"], "HR")
-
-    elif hr_pass:
-        st.error("❌ Sai mật khẩu HR!")
-    else:
-        st.info("🔑 Nhập mật khẩu để truy cập khu vực HR")
+                                st.rerun()
