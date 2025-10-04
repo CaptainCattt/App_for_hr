@@ -210,7 +210,7 @@ with tab_objects[0]:
                     status = leave.get("status", "")
 
                     # Tiêu đề expander bình thường
-                    expander_title = f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')} |{leave.get('status', '')} "
+                    expander_title = f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')} | {status_badge(status)}"
 
                     with st.expander(expander_title):
                         st.write(
