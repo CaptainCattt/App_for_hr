@@ -210,7 +210,7 @@ with tab_objects[0]:
                     status = leave.get("status", "")
 
                     # Tiêu đề expander bình thường
-                    expander_title = f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')} | {status_badge(status)}"
+                    expander_title = f"📄 {leave.get('full_name', '')} | 📌 {leave.get('leave_case', '')} | {status_badge(status)}"
 
                     with st.expander(expander_title):
                         st.write(
@@ -218,6 +218,8 @@ with tab_objects[0]:
                         st.write(
                             f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)")
                         st.write(f"**Loại nghỉ:** {leave.get('leave_type')}")
+                        st.write(
+                            f"**Trường hợp nghỉ:** {leave.get('leave_case')}")
                         st.write(
                             f"**Lý do chi tiết:** {leave.get('reason', '')}")
 
