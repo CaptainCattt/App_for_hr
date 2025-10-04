@@ -148,13 +148,13 @@ with tab_objects[0]:
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
                 search_name = st.text_input("Tìm theo tên nhân viên")
-            with col2:
+            with col3:
                 department_filter = st.selectbox(
                     "Phòng ban", ["Tất cả", "Kinh doanh",
                                   "Marketing", "IT", "Editor"]
                 )
                 department = None if department_filter == "Tất cả" else department_filter
-            with col3:
+            with col2:
                 status_filter = st.selectbox(
                     "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
                 query_status = None if status_filter == "Tất cả" else status_filter
