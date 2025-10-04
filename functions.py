@@ -95,9 +95,15 @@ def status_badge(status: str):
     return STATUS_COLORS.get(status, status)
 
 
-def check_hr_login(username, password):
-    """Kiểm tra đăng nhập HR từ MongoDB (dạng password thường)"""
-    user = USERS_COL.find_one({"username": username, "role": "admin"})
+def check_admin_login(password_input):
+    user = USERS_COL.find_one({"username": "admin"})
     if not user:
+        st.error("❌ Không tìm thấy tài khoản admin trong database.")
         return False
-    return user.get("password") == password
+    if user.get("password") != password_input:
+        st.error("❌ Sai mật khẩu.")
+        return False
+    st.session_state["is_admin"] = True
+    st.session_state["admin_name"] = user.get("full_name", "Admin")
+    st.success(f"🎉 Xin chào {st.session_state['admin_name']}!")
+    return True
