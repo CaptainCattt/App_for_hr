@@ -260,7 +260,7 @@ with tab_objects[0]:
                 </style>
 
                 <div class="info-card">
-                    <div class="info-header">🧾 Thông tin cá nhân</div>
+                    <h3 class="info-header">🧾 Thông tin cá nhân</h3>
                     <div class="info-flex">
                         <div class="info-col">
                             <p><b>👤 Họ và tên:</b> {emp_name}</p>
