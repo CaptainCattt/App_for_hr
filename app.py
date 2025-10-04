@@ -254,12 +254,12 @@ with tab_objects[0]:
                         display: flex;
                         flex-wrap: wrap;
                         justify-content: center;
-                        gap: 40px;
+                        gap: 80px;
                     }}
                     .info-col {{
                         flex: 1;
                         min-width: 250px;
-                        line-height: 2.4;
+                        line-height: 1.8;
                         color: #333;
                     }}
                     .badge {{
