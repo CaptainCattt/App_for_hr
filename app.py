@@ -209,17 +209,10 @@ with tab_objects[0]:
                 for leave in filtered_leaves:
                     status = leave.get("status", "")
 
-                    # Xác định màu theo trạng thái
-                    if status == "approved":
-                        title_color = "green"
-                    elif status == "rejected":
-                        title_color = "red"
-                    else:
-                        title_color = "black"  # pending hoặc khác
+                    # Tiêu đề expander bình thường
+                    expander_title = f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')} |{leave.get('status', '')} "
 
-                    # Container + checkbox để toggle nội dung
-                    container = st.container()
-                    if container.checkbox(f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')}", key=f"toggle_{leave['_id']}"):
+                    with st.expander(expander_title):
                         st.write(
                             f"**Phòng ban:** {leave.get('department', '')}")
                         st.write(
@@ -228,7 +221,7 @@ with tab_objects[0]:
                         st.write(
                             f"**Lý do chi tiết:** {leave.get('reason', '')}")
 
-                        # Trạng thái màu
+                        # Hiển thị trạng thái với màu
                         if status == "pending":
                             st.write(f"**Trạng thái:** {status_badge(status)}")
                         elif status == "approved":
@@ -248,7 +241,7 @@ with tab_objects[0]:
                             st.write(
                                 f"**Phê duyệt bởi:** {leave.get('approved_by')} lúc {leave.get('approved_at')}")
 
-                        # Nút duyệt/từ chối
+                        # Nút duyệt/từ chối chỉ cho pending
                         if status == "pending":
                             col_left, col_spacer, col_right = st.columns([
                                                                          1, 10, 1])
