@@ -11,7 +11,11 @@ st.set_page_config(
     page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered")
 st.title("🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ")
 
-tab1, tab2 = st.tabs(["📝 Gửi yêu cầu nghỉ", "👩‍💼 Dành cho HR"])
+tab1, tab2, tab3 = st.tabs([
+    "📝 Gửi yêu cầu nghỉ",
+    "👩‍💼 Dành cho HR",
+    "📊 Dashboard nhân sự"
+])
 
 # ===============================
 # TAB 1: FORM XIN NGHỈ
@@ -161,6 +165,7 @@ with tab2:
                 st.write(
                     f"**Trạng thái:** {status_badge(leave.get('status', ''))}")
                 st.write(f"**Gửi lúc:** {leave.get('requested_at', '')}")
+                st.markdown("<br>", unsafe_allow_html=True)
 
                 if leave.get("approved_by"):
                     st.write(
@@ -178,3 +183,49 @@ with tab2:
                         if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
                             reject_leave(
                                 leave["_id"], st.session_state.hr_username)
+
+with tab3:
+    st.subheader("📊 Dashboard tổng hợp nghỉ phép")
+
+    # --- Kiểm tra đăng nhập HR ---
+    if "hr_logged_in" not in st.session_state:
+        st.warning("⚠️ Bạn cần đăng nhập ở tab 'Dành cho HR' để xem Dashboard.")
+        st.stop()
+
+    # --- Lấy toàn bộ dữ liệu nghỉ phép ---
+    all_leaves = list(LEAVES_COL.find())
+
+    if not all_leaves:
+        st.info("Chưa có dữ liệu nghỉ phép.")
+    else:
+        import pandas as pd
+        import plotly.express as px
+
+        df = pd.DataFrame(all_leaves)
+        df["start_date"] = pd.to_datetime(df["start_date"], errors="coerce")
+        df["year_month"] = df["start_date"].dt.to_period("M").astype(str)
+
+        # --- Tổng số ngày nghỉ theo phòng ban ---
+        dept_summary = df.groupby("department")["duration"].sum().reset_index()
+        fig1 = px.bar(dept_summary, x="department", y="duration",
+                      title="🏢 Tổng số ngày nghỉ theo phòng ban",
+                      text_auto=True)
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # --- Biểu đồ trạng thái ---
+        status_summary = df["status"].value_counts().reset_index()
+        status_summary.columns = ["status", "count"]
+        fig2 = px.pie(status_summary, names="status", values="count",
+                      title="📊 Tỷ lệ trạng thái nghỉ phép", hole=0.4)
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # --- Biểu đồ theo tháng ---
+        monthly = df.groupby("year_month")["duration"].sum().reset_index()
+        fig3 = px.line(monthly, x="year_month", y="duration",
+                       markers=True, title="📅 Tổng ngày nghỉ theo tháng")
+        st.plotly_chart(fig3, use_container_width=True)
+
+        # --- Bảng chi tiết ---
+        st.markdown("### 📋 Bảng chi tiết nghỉ phép")
+        st.dataframe(df[["full_name", "department", "leave_type",
+                         "start_date", "end_date", "duration", "status"]])
