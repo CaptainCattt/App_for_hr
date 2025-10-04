@@ -33,9 +33,6 @@ def send_leave_request(full_name, department, start_date, end_date, duration, re
         "approved_at": None
     })
 
-    st.success(
-        f"✅ Yêu cầu nghỉ ({leave_case}) từ {start_str} đến {end_str} đã được gửi!")
-
 
 def view_leaves(status_filter=None):
     """Lấy danh sách tất cả yêu cầu nghỉ"""
