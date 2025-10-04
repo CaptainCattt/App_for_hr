@@ -146,27 +146,39 @@ with tab_objects[0]:
 
             # --- Bộ lọc dữ liệu ---
             col1, col2, col3, col4, col5 = st.columns(5)
+
             with col1:
-                search_name = st.text_input("Tìm theo tên nhân viên")
+                # Tìm theo tên nhân viên, mặc định rỗng
+                search_name = st.text_input("Tìm theo tên nhân viên", value="")
+
+            with col2:
+                # Trạng thái, mặc định "Tất cả"
+                status_filter = st.selectbox(
+                    "Trạng thái", ["Tất cả", "pending", "approved", "rejected"], index=0
+                )
+                query_status = None if status_filter == "Tất cả" else status_filter
+
             with col3:
+                # Phòng ban, mặc định "Tất cả"
                 department_filter = st.selectbox(
-                    "Phòng ban", ["Tất cả", "Kinh doanh",
-                                  "Marketing", "IT", "Editor"]
+                    "Phòng ban", ["Tất cả", "Kinh doanh", "Marketing", "IT", "Editor"], index=0
                 )
                 department = None if department_filter == "Tất cả" else department_filter
-            with col2:
-                status_filter = st.selectbox(
-                    "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
-                query_status = None if status_filter == "Tất cả" else status_filter
+
             with col4:
+                # Năm, mặc định năm hiện tại
                 year_options = [
                     "Tất cả"] + [str(y) for y in range(2024, datetime.now().year + 1)]
                 selected_year = st.selectbox(
-                    "Năm", options=year_options, index=year_options.index(str(datetime.now().year)))
+                    "Năm", options=year_options, index=year_options.index(str(datetime.now().year))
+                )
+
             with col5:
+                # Tháng, mặc định tháng hiện tại
                 month_options = ["Tất cả"] + [f"{i:02d}" for i in range(1, 13)]
                 selected_month = st.selectbox(
-                    "Tháng", options=month_options, index=datetime.now().month)
+                    "Tháng", options=month_options, index=datetime.now().month
+                )
 
             # --- Lấy dữ liệu từ DB ---
             leaves = view_leaves(query_status)
