@@ -228,7 +228,7 @@ with tab_objects[0]:
 
                         if leave.get("status") == "pending":
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 6, 1])
+                                                                         1, 8, 1])
 
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
