@@ -254,8 +254,8 @@ with tab_objects[0]:
                         display: flex;
                         flex-wrap: wrap;
                         justify-content: center;
-                        gap: 220px;
-                        margin-left: 100px;
+                        gap: 240px;
+                        margin-left: 60px;
                     }}
                     .info-col {{
                         flex: 1;
