@@ -1,0 +1,7 @@
+[theme]
+base="light"                  # Luôn mặc định Light mode
+primaryColor="#1abc9c"        # Màu chính
+backgroundColor="#f0f2f6"     # Nền app
+secondaryBackgroundColor="#e6eaf0"
+textColor="#262730"
+font="sans serif"      

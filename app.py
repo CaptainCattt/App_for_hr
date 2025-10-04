@@ -8,7 +8,8 @@ from datetime import datetime
 # CẤU HÌNH CƠ BẢN
 # ===============================
 st.set_page_config(
-    page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered")
+    page_title="Hệ thống xin nghỉ - Lâm Media", layout="wide",)
+
 st.markdown("""
     <h1 style='text-align: center; color: #2c3e50;'>
         🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ
