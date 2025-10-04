@@ -111,19 +111,16 @@ with tab_objects[0]:
             # --- Bộ lọc dữ liệu ---
             col1, col2, col3, col4 = st.columns(4)
             with col1:
+                search_name = st.text_input("Tìm theo tên nhân viên")
+            with col2:
                 status_filter = st.selectbox(
                     "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
                 query_status = None if status_filter == "Tất cả" else status_filter
-
-            with col2:
-                search_name = st.text_input("Tìm theo tên nhân viên")
-
             with col3:
                 year_options = [
                     "Tất cả"] + [str(y) for y in range(2024, datetime.now().year + 1)]
                 selected_year = st.selectbox(
                     "Năm", options=year_options, index=year_options.index(str(datetime.now().year)))
-
             with col4:
                 month_options = ["Tất cả"] + [f"{i:02d}" for i in range(1, 13)]
                 selected_month = st.selectbox(
