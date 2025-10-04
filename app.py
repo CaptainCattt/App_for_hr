@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date, timedelta
-from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_hr_login
+from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login
 from settings import EMPLOYEES_COL, LEAVES_COL
 import time
 
@@ -93,7 +93,7 @@ with tab2:
         password = st.text_input("🔒 Mật khẩu", type="password")
 
         if st.button("Đăng nhập"):
-            if check_hr_login(username, password):
+            if check_admin_login(username, password):
                 st.session_state.hr_logged_in = True
                 st.session_state.hr_username = username
                 st.success("✅ Đăng nhập thành công!")
