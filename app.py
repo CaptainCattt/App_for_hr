@@ -247,7 +247,6 @@ with tab_objects[0]:
                         font-weight: 600;
                         color: #2c3e50;
                         margin-bottom: 15px;
-                        border-left: 4px solid #2e7d32;
                         padding-left: 10px;
                         text-align: center;
                     }}
