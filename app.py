@@ -145,19 +145,25 @@ with tab_objects[0]:
             """, unsafe_allow_html=True)
 
             # --- Bộ lọc dữ liệu ---
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
                 search_name = st.text_input("Tìm theo tên nhân viên")
             with col2:
+                department_filter = st.selectbox(
+                    "Phòng ban", ["Tất cả", "Kinh doanh",
+                                  "Marketing", "IT", "Editor"]
+                )
+                department = None if department_filter == "Tất cả" else department_filter
+            with col3:
                 status_filter = st.selectbox(
                     "Trạng thái", ["Tất cả", "pending", "approved", "rejected"])
                 query_status = None if status_filter == "Tất cả" else status_filter
-            with col3:
+            with col4:
                 year_options = [
                     "Tất cả"] + [str(y) for y in range(2024, datetime.now().year + 1)]
                 selected_year = st.selectbox(
                     "Năm", options=year_options, index=year_options.index(str(datetime.now().year)))
-            with col4:
+            with col5:
                 month_options = ["Tất cả"] + [f"{i:02d}" for i in range(1, 13)]
                 selected_month = st.selectbox(
                     "Tháng", options=month_options, index=datetime.now().month)
