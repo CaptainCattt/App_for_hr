@@ -216,14 +216,36 @@ with tab_objects[0]:
 
             # --- Thông tin cơ bản ---
             st.markdown("### 🧾 Thông tin cá nhân")
-            col1, col2, col3 = st.columns(3)
-            col1.write(f"**Họ và tên:** {selected_emp.get('full_name', '')}")
-            col2.write(f"**Phòng ban:** {selected_emp.get('department', '')}")
-            col3.write(f"**Chức vụ:** {selected_emp.get('position', '')}")
-            col1.write(f"**Ngày sinh:** {selected_emp.get('dob', '-')}")
-            col2.write(f"**Số điện thoại:** {selected_emp.get('phone', '-')}")
-            col3.write(
-                f"**Ngày phép còn lại:** {selected_emp.get('remaining_days', 0)}")
+
+            # Card UI đẹp mắt
+            st.markdown(
+                f"""
+                <div style="
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 15px;
+                    box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+                    margin-bottom: 10px;
+                    ">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+
+                        <div style="flex: 1; min-width: 250px;">
+                            <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
+                            <p><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</p>
+                            <p><b>💼 Chức vụ:</b> {selected_emp.get('position', '')}</p>
+                        </div>
+
+                        <div style="flex: 1; min-width: 250px;">
+                            <p><b>🎂 Ngày sinh:</b> {selected_emp.get('dob', '-')}</p>
+                            <p><b>📞 Số điện thoại:</b> {selected_emp.get('phone', '-')}</p>
+                            <p><b>🏖️ Ngày phép còn lại:</b> {selected_emp.get('remaining_days', 0)}</p>
+                        </div>
+
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
 
