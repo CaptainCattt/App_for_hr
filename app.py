@@ -9,7 +9,11 @@ from datetime import datetime
 # ===============================
 st.set_page_config(
     page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered")
-st.title("🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ")
+st.markdown("""
+    <h1 style='text-align: center; color: #2c3e50;'>
+        🏖️ HỆ THỐNG XIN NGHỈ PHÉP NỘI BỘ
+    </h1>
+""", unsafe_allow_html=True)
 
 
 with st.sidebar:
@@ -106,7 +110,11 @@ with tab_objects[0]:
     # ===============================
     if len(tabs) > 1:
         with tab_objects[1]:
-            st.subheader("👩‍💼 Trang quản lý nghỉ phép")
+            st.markdown("""
+                <h3 style='text-align: center; color: #1e3d59;'>
+                    👩‍💼 Trang quản lý nghỉ phép
+                </h3>
+            """, unsafe_allow_html=True)
 
             # --- Bộ lọc dữ liệu ---
             col1, col2, col3, col4 = st.columns(4)
@@ -194,7 +202,11 @@ with tab_objects[0]:
 
     if len(tabs) > 2:
         with tab_objects[2]:
-            st.subheader("📊 Dashboard tổng hợp nghỉ phép")
+            st.markdown("""
+                <h3 style='text-align: center; color: #1e3d59;'>
+                    📊 Dashboard tổng hợp nghỉ phép
+                </h3>
+            """, unsafe_allow_html=True)
 
             # --- Kiểm tra đăng nhập HR ---
             if "hr_logged_in" not in st.session_state:
