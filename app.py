@@ -259,7 +259,7 @@ with tab_objects[0]:
                     .info-col {{
                         flex: 1;
                         min-width: 250px;
-                        line-height: 1.8;
+                        line-height: 2.4;
                         color: #333;
                     }}
                     .badge {{
