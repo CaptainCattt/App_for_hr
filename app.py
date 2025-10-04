@@ -211,13 +211,24 @@ with tab_objects[0]:
                         st.write(
                             f"**Phòng ban:** {leave.get('department', '')}")
                         st.write(
-                            f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)"
-                        )
+                            f"**Thời gian:** {leave.get('start_date')} → {leave.get('end_date')} ({leave.get('duration')} ngày)")
                         st.write(f"**Loại nghỉ:** {leave.get('leave_type')}")
                         st.write(
                             f"**Lý do chi tiết:** {leave.get('reason', '')}")
-                        st.write(
-                            f"**Trạng thái:** {status_badge(leave.get('status', ''))}")
+
+                        # --- Hiển thị trạng thái với màu sắc ---
+                        status = leave.get("status", "")
+                        if status == "pending":
+                            st.write(f"**Trạng thái:** {status_badge(status)}")
+                        elif status == "approved":
+                            st.markdown(
+                                f"**Trạng thái:** <span style='color:green;'>{status}</span>", unsafe_allow_html=True)
+                        elif status == "rejected":
+                            st.markdown(
+                                f"**Trạng thái:** <span style='color:red;'>{status}</span>", unsafe_allow_html=True)
+                        else:
+                            st.write(f"**Trạng thái:** {status}")
+
                         st.write(
                             f"**Gửi lúc:** {leave.get('requested_at', '')}")
                         st.markdown("<br>", unsafe_allow_html=True)
@@ -226,15 +237,14 @@ with tab_objects[0]:
                             st.write(
                                 f"**Phê duyệt bởi:** {leave.get('approved_by')} lúc {leave.get('approved_at')}")
 
-                        if leave.get("status") == "pending":
+                        # --- Nút duyệt/từ chối chỉ cho pending ---
+                        if status == "pending":
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 8, 1])
-
+                                                                         1, 10, 1])
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
                                     approve_leave(
                                         leave["_id"], st.session_state.hr_username)
-
                             with col_right:
                                 if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
                                     reject_leave(
