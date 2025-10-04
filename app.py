@@ -274,7 +274,7 @@ with tab_objects[0]:
 
                 <div class="info-wrapper">
                     <div class="info-card">
-                        <h3 class="info-header">🧾 Thông tin cá nhân</h3>
+                        <h2 class="info-header">🧾 Thông tin cá nhân</h2>
                         <div class="info-flex">
                             <div class="info-col">
                                 <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
