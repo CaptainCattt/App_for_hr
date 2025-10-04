@@ -256,11 +256,12 @@ with tab_objects[0]:
                     }}
                     .info-header {{
                         font-size: 1.3rem;
-                        font-weight: 600;
+                        font-weight: 800;
                         color: #2c3e50;
                         margin-bottom: 15px;
                         padding-left: 10px;
                         text-align: center;
+                        
                     }}
                     .info-flex {{
                         display: flex;
@@ -287,7 +288,7 @@ with tab_objects[0]:
 
                 <div class="info-wrapper">
                     <div class="info-card">
-                        <h2 class="info-header">🧾 Thông tin cá nhân</h2>
+                        <h3 class="info-header">🧾 Thông tin cá nhân</h3>
                         <div class="info-flex">
                             <div class="info-col">
                                 <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
