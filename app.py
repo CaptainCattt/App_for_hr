@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date, timedelta
 from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login
 from settings import EMPLOYEES_COL, LEAVES_COL
-import datetime
+from datetime import datetime
 
 # ===============================
 # CẤU HÌNH CƠ BẢN
