@@ -215,36 +215,45 @@ with tab_objects[0]:
                 st.stop()
 
             # --- Thông tin cơ bản ---
-            # --- Thông tin cơ bản ---
-            st.markdown("### 🧾 Thông tin cá nhân")
+            emp_name = selected_emp.get("full_name", "")
+            department = selected_emp.get("department", "")
+            position = selected_emp.get("position", "")
+            dob = selected_emp.get("dob", "-")
+            phone = selected_emp.get("phone", "-")
+            remaining = selected_emp.get("remaining_days", 0)
 
             st.markdown(
                 f"""
                 <div style="
-                    background-color: #f8f9fa;
-                    padding: 20px;
+                    background-color: #f9fafb;
+                    padding: 25px;
                     border-radius: 15px;
-                    box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
-                    margin-bottom: 10px;
-                    ">
-                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
-
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                    margin-top: 10px;
+                    font-family: 'Segoe UI', sans-serif;
+                ">
+                    <h3 style="color:#333; margin-bottom:15px;">🧾 Thông tin cá nhân</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                        
                         <div style="flex: 1; min-width: 250px;">
-                            <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
-                            <p><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</p>
-                            <p><b>💼 Chức vụ:</b> {selected_emp.get('position', '')}</p>
+                            <p><b>👤 Họ và tên:</b> {emp_name}</p>
+                            <p><b>🏢 Phòng ban:</b> {department}</p>
+                            <p><b>💼 Chức vụ:</b> {position}</p>
                         </div>
 
                         <div style="flex: 1; min-width: 250px;">
-                            <p><b>🎂 Ngày sinh:</b> {selected_emp.get('dob', '-')}</p>
-                            <p><b>📞 Số điện thoại:</b> {selected_emp.get('phone', '-')}</p>
-                            <p><b>🏖️ Ngày phép còn lại:</b> {selected_emp.get('remaining_days', 0)}</p>
+                            <p><b>🎂 Ngày sinh:</b> {dob}</p>
+                            <p><b>📞 Số điện thoại:</b> {phone}</p>
+                            <p><b>🏖️ Ngày phép còn lại:</b> 
+                                <span style="background-color:#e0f7ec; color:#15803d; padding:3px 8px; border-radius:8px;">
+                                    {remaining}
+                                </span>
+                            </p>
                         </div>
-
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True  # 🔥 Bắt buộc có dòng này để render HTML
+                unsafe_allow_html=True
             )
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
