@@ -215,9 +215,9 @@ with tab_objects[0]:
                 st.stop()
 
             # --- Thông tin cơ bản ---
+            # --- Thông tin cơ bản ---
             st.markdown("### 🧾 Thông tin cá nhân")
 
-            # Card UI đẹp mắt
             st.markdown(
                 f"""
                 <div style="
@@ -244,7 +244,7 @@ with tab_objects[0]:
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True  # 🔥 Bắt buộc có dòng này để render HTML
             )
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
