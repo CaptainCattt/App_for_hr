@@ -215,15 +215,6 @@ with tab_objects[0]:
                 st.stop()
 
             # --- Thông tin cơ bản ---
-            selected_emp = {
-                "full_name": "Phạm Văn Minh",
-                "department": "Marketing",
-                "position": "Trưởng nhóm",
-                "dob": "1992-04-25",
-                "phone": "0912345678",
-                "remaining_days": 8
-            }
-
             emp_name = selected_emp.get("full_name", "")
             department = selected_emp.get("department", "")
             position = selected_emp.get("position", "")
