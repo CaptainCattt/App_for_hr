@@ -167,7 +167,8 @@ with tab2:
                         f"**Phê duyệt bởi:** {leave.get('approved_by')} lúc {leave.get('approved_at')}")
 
                 if leave.get("status") == "pending":
-                    col_left, col_spacer, col_right = st.columns([1, 3, 1])
+                    col_left, col_spacer, col_right = st.columns(
+                        [0.5, 1, 3, 1])
 
                     with col_left:
                         if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
