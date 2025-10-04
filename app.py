@@ -188,8 +188,19 @@ with tab_objects[0]:
                         filtered_leaves.append(leave)
                 except Exception:
                     continue
-            filtered_leaves.sort(key=parse_requested_at(
-                filtered_leaves), reverse=True)
+
+            def parse_requested_at(leave):
+                ra = leave.get("requested_at")
+                if not ra:
+                    return datetime.min
+                try:
+                    return datetime.strptime(ra, "%Y-%m-%d %H:%M:%S")
+                except:
+                    return datetime.min
+
+            # Sắp xếp giảm dần theo thời gian gửi
+            filtered_leaves.sort(key=parse_requested_at, reverse=True)
+
             # --- Hiển thị kết quả ---
             if not filtered_leaves:
                 st.info(

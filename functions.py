@@ -122,14 +122,3 @@ def check_admin_login(username_input, password_input):
     st.session_state["admin_name"] = user.get("full_name", "Admin")
     st.success(f"🎉 Xin chào {user.get('full_name', 'Admin')}!")
     return True
-
-
-def parse_requested_at(leave):
-    ra = leave.get("requested_at")
-    if not ra:
-        return datetime.min  # nếu không có, đẩy xuống cuối
-    # Nếu là string ISO
-    try:
-        return datetime.strptime(ra, "%Y-%m-%d %H:%M:%S")
-    except:
-        return datetime.min
