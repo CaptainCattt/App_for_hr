@@ -222,61 +222,74 @@ with tab_objects[0]:
             phone = selected_emp.get("phone", "-")
             remaining = selected_emp.get("remaining_days", 0)
 
-            st.markdown(
-                f"""
+            st.markdown(f"""
                 <style>
+                    .info-wrapper {{
+                        display: flex;
+                        justify-content: center;
+                        margin-top: 20px;
+                    }}
                     .info-card {{
-                        background-color: #f9fafb;
-                        padding: 25px;
+                        background-color: #ffffff;
+                        padding: 25px 30px;
                         border-radius: 15px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-                        margin-top: 15px;
-                        font-family: 'Segoe UI', sans-serif;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                        width: 85%;
+                        max-width: 900px;
+                        transition: all 0.3s ease;
+                        font-family: "Segoe UI", sans-serif;
+                    }}
+                    .info-card:hover {{
+                        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
                     }}
                     .info-header {{
-                        font-size: 22px;
+                        font-size: 1.3rem;
                         font-weight: 600;
-                        color: #333;
+                        color: #2c3e50;
                         margin-bottom: 15px;
+                        border-left: 4px solid #2e7d32;
+                        padding-left: 10px;
+                        text-align: center;
                     }}
                     .info-flex {{
                         display: flex;
                         flex-wrap: wrap;
-                        gap: 20px;
+                        justify-content: center;
+                        gap: 40px;
                     }}
                     .info-col {{
                         flex: 1;
                         min-width: 250px;
-                        line-height: 1.7;
-                        color: #222;
+                        line-height: 1.8;
+                        color: #333;
                     }}
                     .badge {{
                         background-color: #e0f7ec;
                         color: #15803d;
-                        padding: 3px 8px;
+                        padding: 4px 10px;
                         border-radius: 8px;
                         font-weight: 600;
                     }}
                 </style>
 
-                <div class="info-card">
-                    <h3 class="info-header">🧾 Thông tin cá nhân</h3>
-                    <div class="info-flex">
-                        <div class="info-col">
-                            <p><b>👤 Họ và tên:</b> {emp_name}</p>
-                            <p><b>🏢 Phòng ban:</b> {department}</p>
-                            <p><b>💼 Chức vụ:</b> {position}</p>
-                        </div>
-                        <div class="info-col">
-                            <p><b>🎂 Ngày sinh:</b> {dob}</p>
-                            <p><b>📞 Số điện thoại:</b> {phone}</p>
-                            <p><b>🏖️ Ngày phép còn lại:</b> <span class="badge">{remaining}</span></p>
+                <div class="info-wrapper">
+                    <div class="info-card">
+                        <h3 class="info-header">🧾 Thông tin cá nhân</h3>
+                        <div class="info-flex">
+                            <div class="info-col">
+                                <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
+                                <p><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</p>
+                                <p><b>💼 Chức vụ:</b> {selected_emp.get('position', '')}</p>
+                            </div>
+                            <div class="info-col">
+                                <p><b>🎂 Ngày sinh:</b> {selected_emp.get('dob', '-')}</p>
+                                <p><b>📞 Số điện thoại:</b> {selected_emp.get('phone', '-')}</p>
+                                <p><b>🏖️ Ngày phép còn lại:</b> <span class="badge">{selected_emp.get('remaining_days', 0)}</span></p>
+                            </div>
                         </div>
                     </div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
 
