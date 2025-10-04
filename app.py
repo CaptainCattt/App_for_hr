@@ -227,7 +227,7 @@ with tab_objects[0]:
             # --- Hiển thị kết quả ---
             if not filtered_leaves:
                 st.info(
-                    f"🕊️ Không có yêu cầu nghỉ nào trong {selected_month}/{selected_year}.")
+                    f"🕊️ Không có yêu cầu nghỉ nào.")
             else:
                 for leave in filtered_leaves:
                     status = leave.get("status", "")
