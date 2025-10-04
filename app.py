@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date, timedelta
-from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login
+from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login, parse_requested_at
 from settings import EMPLOYEES_COL, LEAVES_COL
 from datetime import datetime
 
@@ -45,7 +45,6 @@ tab_objects = st.tabs(tabs)
 # TAB 1: FORM XIN NGHỈ
 # ===============================
 with tab_objects[0]:
-    st.subheader("📝 Gửi yêu cầu nghỉ")
 
     # --- Khởi tạo biến session để lưu thời điểm bấm nút ---
     if "last_submit_time" not in st.session_state:
@@ -189,7 +188,8 @@ with tab_objects[0]:
                         filtered_leaves.append(leave)
                 except Exception:
                     continue
-
+            filtered_leaves.sort(key=parse_requested_at(
+                filtered_leaves), reverse=True)
             # --- Hiển thị kết quả ---
             if not filtered_leaves:
                 st.info(
@@ -217,7 +217,7 @@ with tab_objects[0]:
 
                         if leave.get("status") == "pending":
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 4, 1])
+                                                                         1, 6, 1])
 
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
