@@ -111,9 +111,9 @@ with tab_objects[0]:
     if len(tabs) > 1:
         with tab_objects[1]:
             st.markdown("""
-                <h1 style='text-align: center; color: #1e3d59;'>
+                <h2 style='text-align: center; color: #1e3d59;'>
                     👩‍💼 Trang quản lý nghỉ phép
-                </h1>
+                </h2>
             """, unsafe_allow_html=True)
 
             # --- Bộ lọc dữ liệu ---
@@ -203,9 +203,9 @@ with tab_objects[0]:
     if len(tabs) > 2:
         with tab_objects[2]:
             st.markdown("""
-                <h1 style='text-align: center; color: #1e3d59;'>
+                <h2 style='text-align: center; color: #1e3d59;'>
                     📊 Dashboard tổng hợp nghỉ phép
-                </h1>
+                </h2>
             """, unsafe_allow_html=True)
 
             # --- Kiểm tra đăng nhập HR ---
