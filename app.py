@@ -176,6 +176,11 @@ with tab_objects[0]:
                 leaves = [l for l in leaves if search_name.lower() in l.get(
                     "full_name", "").lower()]
 
+            # --- Lọc theo phòng ban ---
+            if department:
+                leaves = [l for l in leaves if l.get(
+                    "department") == department]
+
             # --- Lọc theo tháng/năm ---
             filtered_leaves = []
             for leave in leaves:
