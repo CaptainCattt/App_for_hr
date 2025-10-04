@@ -14,6 +14,7 @@ db = client[DB_NAME]
 # --- Collections ---
 USERS_COL = db["users"]
 LEAVES_COL = db["leaves"]
+EMPLOYEES_COL = db["employees"]
 
 # --- Constants ---
 STATUS_COLORS = {
