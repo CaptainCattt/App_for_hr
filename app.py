@@ -292,7 +292,7 @@ with tab_objects[0]:
             """, unsafe_allow_html=True)
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
-
+            st.markdown("<br><br>", unsafe_allow_html=True)
             if not all_leaves:
                 st.info("Chưa có dữ liệu nghỉ phép.")
             else:
