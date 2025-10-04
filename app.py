@@ -8,7 +8,7 @@ from datetime import datetime
 # CẤU HÌNH CƠ BẢN
 # ===============================
 st.set_page_config(
-    page_title="Hệ thống xin nghỉ - Lâm Media", layout="wide",)
+    page_title="Hệ thống xin nghỉ - Lâm Media", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
     """
     <div style='top: 30px; left: 40px; z-index: 1000;'>
