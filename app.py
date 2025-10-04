@@ -207,20 +207,12 @@ with tab_objects[0]:
                     f"🕊️ Không có yêu cầu nghỉ nào trong {selected_month}/{selected_year}.")
             else:
                 for leave in filtered_leaves:
-                    # --- Xác định màu cho expander title ---
                     status = leave.get("status", "")
-                    if status == "approved":
-                        title_color = "green"
-                    elif status == "rejected":
-                        title_color = "red"
-                    else:
-                        title_color = "#000000"  # pending hoặc khác
 
-                    expander_title = f"""<span style='color:{title_color}; font-weight:bold'>
-            📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')}
-            </span>"""
+                    # Tiêu đề expander bình thường
+                    expander_title = f"📄 {leave.get('full_name', '')} | {leave.get('leave_case', '')}"
 
-                    with st.expander(expander_title, unsafe_allow_html=True):
+                    with st.expander(expander_title):
                         st.write(
                             f"**Phòng ban:** {leave.get('department', '')}")
                         st.write(
@@ -229,7 +221,7 @@ with tab_objects[0]:
                         st.write(
                             f"**Lý do chi tiết:** {leave.get('reason', '')}")
 
-                        # --- Hiển thị trạng thái với màu ---
+                        # Hiển thị trạng thái với màu
                         if status == "pending":
                             st.write(f"**Trạng thái:** {status_badge(status)}")
                         elif status == "approved":
@@ -249,7 +241,7 @@ with tab_objects[0]:
                             st.write(
                                 f"**Phê duyệt bởi:** {leave.get('approved_by')} lúc {leave.get('approved_at')}")
 
-                        # --- Nút duyệt/từ chối chỉ cho pending ---
+                        # Nút duyệt/từ chối chỉ cho pending
                         if status == "pending":
                             col_left, col_spacer, col_right = st.columns([
                                                                          1, 10, 1])
