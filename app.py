@@ -15,7 +15,7 @@ st.markdown(
     <div style='top: 30px; left: 40px; z-index: 1000;'>
         <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='200'/>
     </div>
-    <h1 style='text-align: center;'> 🏢 Yêu cầu Nghỉ phép 🏢</h1>""",
+    <h1 style='text-align: center;'> 🏢 Yêu cầu Nghỉ phép</h1>""",
     unsafe_allow_html=True,
 )
 
@@ -141,7 +141,7 @@ with tab_objects[0]:
         with tab_objects[1]:
             st.markdown("""
                 <h2 style='text-align: center; color: #1e3d59;'>
-                    👩‍💼 Trang quản lý nghỉ phép
+                    👩‍💼 Quản lý nghỉ phép
                 </h2>
             """, unsafe_allow_html=True)
 
@@ -284,7 +284,7 @@ with tab_objects[0]:
         with tab_objects[2]:
             st.markdown("""
                 <h2 style='text-align: center; color: #1e3d59;'>
-                    📊 Dashboard tổng hợp nghỉ phép
+                    📊 Dashboard tổng hợp
                 </h2>
             """, unsafe_allow_html=True)
 
@@ -323,11 +323,11 @@ with tab_objects[0]:
                     }}
                     .info-card {{
                         background-color: #ffffff;
-                        padding: 20px;
+                        padding: 25px 30px;
                         border-radius: 15px;
                         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
                         width: 95%;
-                        max-width: 800px;
+                        max-width: 1000px;  /* 👉 tăng từ 800 lên 1000 */
                         transition: all 0.3s ease;
                         font-family: "Segoe UI", sans-serif;
                     }}
@@ -335,7 +335,7 @@ with tab_objects[0]:
                         font-size: 1.2rem;
                         font-weight: 800;
                         color: #2c3e50;
-                        margin-bottom: 10px;
+                        margin-bottom: 15px;
                         text-align: center;
                     }}
                     .info-flex {{
@@ -344,15 +344,17 @@ with tab_objects[0]:
                         flex-wrap: wrap;
                         justify-content: space-between;
                         align-items: center;
-                        gap: 10px;
+                        gap: 15px;  /* 👉 giảm gap để các item gần nhau hơn */
                     }}
                     .info-item {{
                         flex: 1;
-                        min-width: 150px;
+                        min-width: 180px;  /* 👉 tăng từ 150 lên 180 */
                         text-align: center;
                         line-height: 1.8;
                         color: #333;
                         font-size: 0.95rem;
+                        word-break: keep-all; /* ✅ giữ tên trên cùng 1 dòng */
+                        white-space: nowrap;
                     }}
                     .badge {{
                         background-color: #e0f7ec;
@@ -370,6 +372,7 @@ with tab_objects[0]:
                         .info-item {{
                             text-align: left;
                             width: 100%;
+                            white-space: normal; /* Cho phép xuống dòng trên mobile */
                         }}
                     }}
                 </style>
