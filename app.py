@@ -370,6 +370,7 @@ with tab_objects[0]:
                         color: #2c3e50;
                         margin-bottom: 15px;
                         text-align: center;
+                        font-weight: 900;
                     }}
                     .info-flex {{
                         display: flex;
@@ -412,7 +413,7 @@ with tab_objects[0]:
 
                 <div class="info-wrapper">
                     <div class="info-card">
-                        <h3 class="info-header"> 🪪  Thông tin cá nhân</h3>
+                        <h3 class="info-header"> Thông tin cá nhân</h3>
                         <div class="info-flex">
                             <div class="info-item"><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</div>
                             <div class="info-item"><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</div>
