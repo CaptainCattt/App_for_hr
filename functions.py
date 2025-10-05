@@ -34,7 +34,6 @@ def send_leave_request(full_name, department, start_date, end_date, duration, re
     })
 
 
-@st.cache_data(ttl=300)
 def view_leaves(status_filter=None):
     """Lấy danh sách tất cả yêu cầu nghỉ"""
     query = {}
