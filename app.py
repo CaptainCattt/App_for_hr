@@ -53,7 +53,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown("<br><br>", unsafe_allow_html=True)
-st.markdown("<br><br>", unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("🔐 Đăng nhập HR")
