@@ -39,7 +39,7 @@ st.markdown(
             width: 180px;
         }
         .header-container h1 {
-            font-size: 32px;
+            font-size: 36px;
             line-height: 1.2;
         }
     }
