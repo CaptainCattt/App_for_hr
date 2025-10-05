@@ -24,7 +24,7 @@ st.markdown(
     }
 
     .header-container img {
-        width: 180px;
+        width: 200px;
     }
 
     .header-container h1 {
@@ -36,10 +36,10 @@ st.markdown(
     /* Khi hiển thị trên điện thoại (màn hình nhỏ) */
     @media (max-width: 600px) {
         .header-container img {
-            width: 160px;
+            width: 180px;
         }
         .header-container h1 {
-            font-size: 28px;  /* vẫn to, dễ đọc trên điện thoại */
+            font-size: 32px;
             line-height: 1.2;
         }
     }
@@ -52,7 +52,8 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("🔐 Đăng nhập HR")
