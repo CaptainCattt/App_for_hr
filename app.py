@@ -17,54 +17,27 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* Ẩn khoảng trắng Streamlit mặc định trên đầu trang */
-        .block-container {
-            padding-top: 1rem;
-            padding-bottom: 0rem;
+    @media (max-width: 600px) {
+        h1 {
+            font-size: 22px !important;
         }
-
-        /* Căn giữa toàn bộ header */
-        .header-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
+        img {
+            width: 150px !important;
         }
-
-        /* Logo responsive */
-        .header-logo {
-            width: 180px;
-            max-width: 60%;
-            height: auto;
+    }
+    @media (min-width: 601px) {
+        h1 {
+            font-size: 30px !important;
         }
-
-        /* Tiêu đề chính */
-        .header-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 10px;
+        img {
+            width: 200px !important;
         }
-
-        /* 📱 Responsive cho mobile */
-        @media (max-width: 600px) {
-            .header-title {
-                font-size: 1.4rem;
-            }
-            .header-logo {
-                width: 140px;
-                max-width: 70%;
-            }
-        }
+    }
     </style>
 
-    <div class="header-container">
-        <img src="https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png" 
-             class="header-logo" alt="Lam Media Logo" />
-        <h1 class="header-title">🏢 Yêu cầu Nghỉ phép 🏖️</h1>
+    <div style='text-align: center; margin-top: 10px;'>
+        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' />
+        <h1>🏢 Yêu cầu Nghỉ phép 🏢</h1>
     </div>
     """,
     unsafe_allow_html=True,
