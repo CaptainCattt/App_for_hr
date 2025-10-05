@@ -146,7 +146,7 @@ with tab_objects[0]:
             """, unsafe_allow_html=True)
 
             # --- Bộ lọc dữ liệu ---
-            col1, col2, col3, col4, col5 = st.columns(5)
+            col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
 
             with col1:
                 # Tìm theo tên nhân viên, mặc định rỗng
@@ -323,39 +323,36 @@ with tab_objects[0]:
                     }}
                     .info-card {{
                         background-color: #ffffff;
-                        padding: 25px 30px;
+                        padding: 20px;
                         border-radius: 15px;
                         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-                        width: 85%;
-                        max-width: 900px;
+                        width: 95%;
+                        max-width: 800px;
                         transition: all 0.3s ease;
                         font-family: "Segoe UI", sans-serif;
                     }}
-                    .info-card:hover {{
-                        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-                    }}
                     .info-header {{
-                        font-size: 1.3rem;
+                        font-size: 1.2rem;
                         font-weight: 800;
                         color: #2c3e50;
-                        margin-bottom: 15px;
-                        padding-left: 10px;
+                        margin-bottom: 10px;
                         text-align: center;
-                        
                     }}
                     .info-flex {{
                         display: flex;
+                        flex-direction: row;
                         flex-wrap: wrap;
-                        justify-content: center;
-                        gap: 240px;
-                        margin-left: 60px;
-                        margin-top: 20px;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 10px;
                     }}
-                    .info-col {{
+                    .info-item {{
                         flex: 1;
-                        min-width: 250px;
+                        min-width: 150px;
+                        text-align: center;
                         line-height: 1.8;
                         color: #333;
+                        font-size: 0.95rem;
                     }}
                     .badge {{
                         background-color: #e0f7ec;
@@ -364,26 +361,34 @@ with tab_objects[0]:
                         border-radius: 8px;
                         font-weight: 600;
                     }}
+                    /* 📱 Responsive cho điện thoại */
+                    @media (max-width: 600px) {{
+                        .info-flex {{
+                            flex-direction: column;
+                            align-items: flex-start;
+                        }}
+                        .info-item {{
+                            text-align: left;
+                            width: 100%;
+                        }}
+                    }}
                 </style>
 
                 <div class="info-wrapper">
                     <div class="info-card">
                         <h3 class="info-header">🧾 Thông tin cá nhân</h3>
                         <div class="info-flex">
-                            <div class="info-col">
-                                <p><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</p>
-                                <p><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</p>
-                                <p><b>💼 Chức vụ:</b> {selected_emp.get('position', '')}</p>
-                            </div>
-                            <div class="info-col">
-                                <p><b>🎂 Ngày sinh:</b> {selected_emp.get('dob', '-')}</p>
-                                <p><b>📞 Số điện thoại:</b> {selected_emp.get('phone', '-')}</p>
-                                <p><b>🏖️ Ngày phép còn lại:</b> <span class="badge">{selected_emp.get('remaining_days', 0)}</span></p>
-                            </div>
+                            <div class="info-item"><b>👤 Họ và tên:</b> {selected_emp.get('full_name', '')}</div>
+                            <div class="info-item"><b>🏢 Phòng ban:</b> {selected_emp.get('department', '')}</div>
+                            <div class="info-item"><b>💼 Chức vụ:</b> {selected_emp.get('position', '')}</div>
+                            <div class="info-item"><b>🎂 Ngày sinh:</b> {selected_emp.get('dob', '-')}</div>
+                            <div class="info-item"><b>📞 SĐT:</b> {selected_emp.get('phone', '-')}</div>
+                            <div class="info-item"><b>🏖️ Còn lại:</b> <span class="badge">{selected_emp.get('remaining_days', 0)}</span></div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+
             # --- Lấy toàn bộ dữ liệu nghỉ phép ---
             all_leaves = list(LEAVES_COL.find())
             st.markdown("<br><br>", unsafe_allow_html=True)
