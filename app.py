@@ -436,8 +436,7 @@ with tab_objects[0]:
                 import plotly.express as px
 
                 df = pd.DataFrame(all_leaves)
-                df["start_date"] = pd.to_datetime(
-                    df["start_date"], errors="coerce")
+
                 df["year_month"] = df["start_date"].dt.to_period(
                     "M").astype(str)
 
