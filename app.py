@@ -24,7 +24,7 @@ st.markdown(
     }
 
     .header-container img {
-        width: 180px;
+        width: 280px;
     }
 
     .header-container h1 {
