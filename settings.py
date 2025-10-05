@@ -1,15 +1,18 @@
 # settings.py
-import uuid
 import streamlit as st
 from pymongo import MongoClient
-from streamlit_cookies_manager import EncryptedCookieManager
-import os
 
 # --- MongoDB Config ---
-MONGO_URL = st.secrets["MONGO_URL"]
-DB_NAME = "leave_management"
-client = MongoClient(MONGO_URL)
-db = client[DB_NAME]
+
+
+@st.cache_resource
+def get_mongo_client():
+    """Kết nối MongoDB (chỉ tạo 1 lần, dùng lại giữa các lần rerun)"""
+    return MongoClient(st.secrets["MONGO_URL"])
+
+
+client = get_mongo_client()
+db = client["leave_management"]
 
 # --- Collections ---
 USERS_COL = db["users"]
