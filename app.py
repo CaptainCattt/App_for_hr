@@ -24,11 +24,11 @@ st.markdown(
     }
 
     .header-container img {
-        width: 280px;
+        width: 180px;
     }
 
     .header-container h1 {
-        font-size: 34px;
+        font-size: 48px;
         font-weight: bold;
         margin-top: 10px;
     }
