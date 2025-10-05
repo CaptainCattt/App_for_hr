@@ -437,8 +437,11 @@ with tab_objects[0]:
 
                 df = pd.DataFrame(all_leaves)
 
-                df["year_month"] = df["start_date"].dt.to_period(
-                    "M").astype(str)
+                df["year_month"] = (
+                    pd.to_datetime(df["start_date"], errors="coerce")
+                    .dt.to_period("M")
+                    .astype(str)
+                )
 
                 # --- Tổng số ngày nghỉ theo phòng ban ---
                 dept_summary = df.groupby("department")[
