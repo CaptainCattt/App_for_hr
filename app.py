@@ -10,33 +10,43 @@ from datetime import datetime
 # ⚙️ Tắt các log cảnh báo (bao gồm cả st.cache deprecated)
 st.set_page_config(
     page_title="Hệ thống xin nghỉ - Lâm Media",
-    layout="wide",  # 👉 wide sẽ tự co giãn tốt hơn trên mobile so với "centered"
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
 st.markdown(
     """
     <style>
-    @media (max-width: 600px) {
-        h1 {
-            font-size: 22px !important;
-        }
-        img {
-            width: 150px !important;
-        }
+    /* Logo và tiêu đề responsive */
+    .header-container {
+        text-align: center;
+        margin-top: 10px;
     }
-    @media (min-width: 601px) {
-        h1 {
-            font-size: 30px !important;
+
+    .header-container img {
+        width: 180px;
+    }
+
+    .header-container h1 {
+        font-size: 34px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    /* Khi hiển thị trên điện thoại (màn hình nhỏ) */
+    @media (max-width: 600px) {
+        .header-container img {
+            width: 160px;
         }
-        img {
-            width: 200px !important;
+        .header-container h1 {
+            font-size: 28px;  /* vẫn to, dễ đọc trên điện thoại */
+            line-height: 1.2;
         }
     }
     </style>
 
-    <div style='text-align: center; margin-top: 10px;'>
-        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' />
+    <div class='header-container'>
+        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png'/>
         <h1>🏢 Yêu cầu Nghỉ phép 🏢</h1>
     </div>
     """,
