@@ -9,13 +9,64 @@ from datetime import datetime
 # ===============================
 # ⚙️ Tắt các log cảnh báo (bao gồm cả st.cache deprecated)
 st.set_page_config(
-    page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered", initial_sidebar_state="collapsed")
+    page_title="Hệ thống xin nghỉ - Lâm Media",
+    layout="wide",  # 👉 wide sẽ tự co giãn tốt hơn trên mobile so với "centered"
+    initial_sidebar_state="collapsed"
+)
+
 st.markdown(
     """
-    <div style='top: 30px; left: 40px; z-index: 1000;'>
-        <img src='https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png' width='200'/>
+    <style>
+        /* Ẩn khoảng trắng Streamlit mặc định trên đầu trang */
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 0rem;
+        }
+
+        /* Căn giữa toàn bộ header */
+        .header-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Logo responsive */
+        .header-logo {
+            width: 180px;
+            max-width: 60%;
+            height: auto;
+        }
+
+        /* Tiêu đề chính */
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 10px;
+        }
+
+        /* 📱 Responsive cho mobile */
+        @media (max-width: 600px) {
+            .header-title {
+                font-size: 1.4rem;
+            }
+            .header-logo {
+                width: 140px;
+                max-width: 70%;
+            }
+        }
+    </style>
+
+    <div class="header-container">
+        <img src="https://raw.githubusercontent.com/CaptainCattt/Report_of_shopee/main/logo-lamvlog.png" 
+             class="header-logo" alt="Lam Media Logo" />
+        <h1 class="header-title">🏢 Yêu cầu Nghỉ phép 🏖️</h1>
     </div>
-    <h1 style='text-align: center;'> 🏢 Yêu cầu Nghỉ phép</h1>""",
+    """,
     unsafe_allow_html=True,
 )
 
@@ -348,7 +399,7 @@ with tab_objects[0]:
                     }}
                     .info-item {{
                         flex: 1;
-                        min-width: 180px;  /* 👉 tăng từ 150 lên 180 */
+                        min-width: 250px;
                         text-align: center;
                         line-height: 1.8;
                         color: #333;
