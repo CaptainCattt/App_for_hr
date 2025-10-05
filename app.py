@@ -7,8 +7,8 @@ from datetime import datetime
 # ===============================
 # CẤU HÌNH CƠ BẢN
 # ===============================
-import warnings
-warnings.filterwarnings("ignore", message=".*st.cache is deprecated.*")
+# ⚙️ Tắt các log cảnh báo (bao gồm cả st.cache deprecated)
+st.set_option('logger.level', 'error')
 st.set_page_config(
     page_title="Hệ thống xin nghỉ - Lâm Media", layout="centered", initial_sidebar_state="collapsed")
 st.markdown(
