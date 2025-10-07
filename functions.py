@@ -71,7 +71,7 @@ def approve_leave(leave_id, hr_name):
             {"$inc": {"remaining_days": -duration}}
         )
 
-    placeholder.success("✅ Đã duyệt yêu cầu nghỉ!")
+    placeholder.success("✅ Đã duyệt !")
     time.sleep(1)
     placeholder.empty()
     st.rerun()
@@ -94,7 +94,7 @@ def reject_leave(leave_id, hr_name):
         }}
     )
 
-    placeholder.error("❌ Đã từ chối yêu cầu nghỉ!")
+    placeholder.error("❌ Đã từ chối!")
     time.sleep(1)
     placeholder.empty()
     st.rerun()
