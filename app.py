@@ -306,7 +306,7 @@ with tab_objects[0]:
                         if status == "pending":
                             # Tạo 3 cột với khoảng cách giữa 2 nút
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 2.5, 1])
+                                                                         1, 4, 1])
 
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
