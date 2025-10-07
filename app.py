@@ -134,8 +134,17 @@ with tab_objects[0]:
         ])
 
     col1, col2, col3 = st.columns(3)
+
+    max_allowed = 30.0 if leave_type != "Nghỉ phép năm" else max(
+        0.5, remaining_days)
+
     duration = col1.number_input(
-        "Số ngày nghỉ", min_value=0.5, max_value=30.0, step=0.5, value=1.0)
+        "Số ngày nghỉ",
+        min_value=0.5,
+        max_value=max_allowed,
+        step=0.5,
+        value=1.0
+    )
     start_date = col2.date_input("Ngày bắt đầu nghỉ", value=date.today())
     end_date_default = start_date + timedelta(days=int(duration)-1)
     end_date = col3.date_input("Ngày kết thúc nghỉ", value=end_date_default)
