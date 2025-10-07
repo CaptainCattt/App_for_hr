@@ -304,20 +304,19 @@ with tab_objects[0]:
 
                         # Nút duyệt/từ chối chỉ cho pending
                         if status == "pending":
-                            # Tạo 3 cột: trái - giữa - phải (nút nằm giữa)
-                            col_left, col_center, col_right = st.columns([
-                                                                         1, 2, 1])
+                            # Tạo 3 cột với khoảng cách giữa 2 nút
+                            col_left, col_spacer, col_right = st.columns([
+                                                                         1, 2.5, 1])
 
-                            with col_center:
-                                c1, c2 = st.columns([1, 1])
-                                with c1:
-                                    if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
-                                        approve_leave(
-                                            leave["_id"], st.session_state.hr_username)
-                                with c2:
-                                    if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
-                                        reject_leave(
-                                            leave["_id"], st.session_state.hr_username)
+                            with col_left:
+                                if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
+                                    approve_leave(
+                                        leave["_id"], st.session_state.hr_username)
+
+                            with col_right:
+                                if st.button("❌ Từ chối", key=f"reject_{leave['_id']}"):
+                                    reject_leave(
+                                        leave["_id"], st.session_state.hr_username)
 
     if len(tabs) > 2:
         with tab_objects[2]:
