@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date, timedelta
-from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login
+from functions import send_leave_request, view_leaves, approve_leave, reject_leave, status_badge, check_admin_login, get_collections, load_collection, save_dataframe, to_excel
 from settings import EMPLOYEES_COL, LEAVES_COL
 from datetime import datetime
 
@@ -71,7 +71,9 @@ with st.sidebar:
 
 tabs = ["📝 Yêu cầu"]
 if "hr_logged_in" in st.session_state and st.session_state.hr_logged_in:
-    tabs.extend(["👩‍💼 Quản lý yêu cầu", "📊 Dashboard nhân viên"])
+
+    tabs.extend(
+        ["👩‍💼 Quản lý yêu cầu", "📊 Dashboard nhân viên", "‼️Dashboard HR"])
 
 tab_objects = st.tabs(tabs)
 
@@ -306,7 +308,7 @@ with tab_objects[0]:
                         if status == "pending":
                             # Tạo 3 cột với khoảng cách giữa 2 nút
                             col_left, col_spacer, col_right = st.columns([
-                                                                         1, 4, 1])
+                                                                         1, 2, 1])
 
                             with col_left:
                                 if st.button("✅ Duyệt", key=f"approve_{leave['_id']}"):
@@ -474,3 +476,62 @@ with tab_objects[0]:
                 st.markdown("### 📋 Bảng chi tiết nghỉ phép")
                 st.dataframe(df[["full_name", "department", "leave_type",
                                 "start_date", "end_date", "duration", "status"]])
+
+    if len(tabs) > 3:
+        with tab_objects[3]:
+            # ================= Streamlit UI =================
+            st.title("HR Dashboard - MongoDB Sheets")
+
+            # 1️⃣ Lấy danh sách collection và loại bỏ 'admin'
+            collections = [c for c in get_collections() if c.lower()
+                           != "admin"]
+            if not collections:
+                st.warning(
+                    "Hiện tại chưa có collection nào trong MongoDB (ngoại trừ admin).")
+                st.stop()
+
+            # 2️⃣ Xác định index mặc định cho 'employees' nếu có
+            default_index = 0
+            if "employees" in collections:
+                default_index = collections.index("employees")
+
+            # 3️⃣ Selectbox cho phép chọn collection, mặc định là 'employees'
+            selected_col = st.selectbox(
+                "Chọn bảng dữ liệu",
+                collections,
+                index=default_index,
+                key="select_col"
+            )
+
+            # 4️⃣ Load dữ liệu từ collection đã chọn
+            df = load_collection(selected_col)
+            if df.empty:
+                st.info(
+                    "Collection này đang trống. HR có thể upload CSV hoặc thêm trực tiếp.")
+
+            # 4️⃣ Hiển thị và edit trực tiếp
+            edited_df = st.data_editor(
+                df,
+                num_rows="dynamic",
+                use_container_width=True,
+                key=f"editor_{selected_col}"
+            )
+
+            # 5️⃣ Lưu dữ liệu sau khi edit
+            if st.button("Lưu thay đổi về MongoDB", key=f"save_btn_{selected_col}"):
+                if edited_df.empty:
+                    st.warning("Không có dữ liệu để lưu.")
+                else:
+                    save_dataframe(selected_col, edited_df)
+                    st.success(f"Đã lưu thay đổi vào bảng {selected_col}!")
+                    df = load_collection(selected_col)
+
+            # 6️⃣ Tải dữ liệu Excel
+            if not df.empty:
+                st.download_button(
+                    label="Tải dữ liệu Excel",
+                    data=to_excel(df),
+                    file_name=f"{selected_col}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key=f"download_{selected_col}"
+                )

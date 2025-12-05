@@ -4,12 +4,13 @@ import streamlit as st
 from datetime import datetime
 from bson import ObjectId
 import time
-from settings import LEAVES_COL, USERS_COL, STATUS_COLORS, EMPLOYEES_COL
-
-
+from settings import LEAVES_COL, USERS_COL, STATUS_COLORS, EMPLOYEES_COL, db
+import pandas as pd
+import io
 # ===============================
 # LEAVE MANAGEMENT FUNCTIONS
 # ===============================
+
 
 def send_leave_request(full_name, department, start_date, end_date, duration, reason, leave_type, leave_case):
     """Lưu yêu cầu nghỉ mới vào MongoDB"""
@@ -119,3 +120,64 @@ def check_admin_login(username_input, password_input):
     st.session_state["admin_name"] = user.get("full_name", "Admin")
     st.success(f"🎉 Xin chào {user.get('full_name', 'Admin')}!")
     return True
+
+
+def get_collections():
+    """Danh sách collection trong db"""
+    return db.list_collection_names()
+
+
+def load_collection(col_name):
+    """Load dữ liệu collection ra DataFrame"""
+    col = db[col_name]
+    data = list(col.find({}))
+    if not data:
+        return pd.DataFrame()
+    df = pd.DataFrame(data)
+    df["_id"] = df["_id"].astype(str)  # chuyển ObjectId về string để hiển thị
+    return df
+
+
+def save_dataframe(col_name, df):
+    """
+    Lưu DataFrame vào MongoDB
+    - Dùng _id để quyết định update vs insert
+    - Xóa những dòng bị xóa ở UI
+    """
+    col = db[col_name]
+
+    # 1️⃣ Lấy danh sách _id cũ
+    old_ids = set([str(doc["_id"]) for doc in col.find({}, {"_id": 1})])
+
+    # 2️⃣ Lấy danh sách _id hiện có trong DataFrame
+    if "_id" in df.columns:
+        df["_id"] = df["_id"].astype(str)
+        new_ids = set(df["_id"].dropna().tolist())
+    else:
+        df["_id"] = None
+        new_ids = set()
+
+    # 3️⃣ Xóa những dòng bị xóa trên UI
+    ids_to_delete = old_ids - new_ids
+    if ids_to_delete:
+        col.delete_many({"_id": {"$in": [ObjectId(i) for i in ids_to_delete]}})
+
+    # 4️⃣ Insert/Update từng dòng
+    for _, row in df.iterrows():
+        data = {k: v for k, v in row.to_dict().items() if pd.notnull(v)
+                and k != "_id"}
+
+        if row["_id"] and row["_id"].strip() != "None":
+            # Update dòng cũ
+            col.update_one({"_id": ObjectId(row["_id"])}, {"$set": data})
+        else:
+            # Insert dòng mới
+            col.insert_one(data)
+
+
+def to_excel(df):
+    """Xuất DataFrame ra Excel"""
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+    return output.getvalue()

@@ -12,7 +12,7 @@ client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
 # --- Collections ---
-USERS_COL = db["users"]
+USERS_COL = db["admin"]
 LEAVES_COL = db["leaves"]
 EMPLOYEES_COL = db["employees"]
 
