@@ -10,3 +10,4 @@ python-dotenv
 pymongo
 streamlit_authenticator
 streamlit-cookies-manager
+xlsxwriter
